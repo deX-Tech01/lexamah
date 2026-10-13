@@ -1,0 +1,9 @@
+project_id = "tvycfhrbdtyxmyeymdgo"
+
+[functions.account-login]
+# Password authentication happens in the handler via Supabase Auth.
+verify_jwt = false
+
+[functions.content-download]
+# The handler verifies the caller with Supabase Auth before checking access code.
+verify_jwt = false

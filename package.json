@@ -1,0 +1,9 @@
+{
+  "name": "lexamah",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check dist/js/app.js && node --check dist/js/backend.js && node --check dist/js/store.js && node --check dist/js/data.js && node --check dist/js/admin.js && node --check dist/js/audio.js && node --check dist/js/downloads.js",
+    "test": "node tests/workflows.mjs && node tests/admin.mjs && node tests/accounts-downloads.mjs && node tests/audio.mjs"
+  }
+}

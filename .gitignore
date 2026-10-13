@@ -1,0 +1,7 @@
+
+# Server credentials are never tracked or included in browser assets.
+.env
+.env.*
+!.env.example
+.dev.vars
+supabase/.temp/
