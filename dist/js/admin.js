@@ -1,4 +1,4 @@
-import {usersScreen,mailScreen,bindUsers,usersClick,loadUsersTab} from './users.js';
+import {resetUsers,usersScreen,mailScreen,bindUsers,usersClick,loadUsersTab} from './users.js';
 import {backend} from './backend.js';
 import {loadStats,statsCards} from './analytics.js';
 import {loadAbout,aboutEditor,bindAboutEditor} from './about.js';
@@ -8,7 +8,9 @@ const types={materials:'Materials',lectures:'Lecture Recordings',lectureNotes:'L
 let state={status:'idle',items:{},type:'materials',query:'',error:''},busy=false;
 let ui;
 export function initAdmin(callbacks){ui=callbacks;}
-export async function loadAdmin(){state.status='loading';state.error='';ui.render();try{await backend.refreshSession();if(!backend.user()){state.status='signedout';return;}if(!await backend.isAdmin()){state.status='denied';return;}await subjectCatalog.load();await loadAbout();await loadStats();const results=await Promise.all(Object.keys(types).map(async type=>[type,await backend.cloudRead(type)]));state.items=Object.fromEntries(results);state.status='ready';await loadUsersTab(state.type,ui);}catch(err){state.status='error';state.error=err.message;}finally{ui.render();}}
+let loadEpoch=0;
+export function resetAdmin(){loadEpoch++;state={status:'idle',items:{},type:'materials',query:'',error:''};resetUsers();}
+export async function loadAdmin(){const epoch=++loadEpoch,owner=backend.user()?.id;state.status='loading';state.error='';ui.render();try{await backend.refreshSession();if(!backend.user()){state.status='signedout';return;}if(!await backend.isAdmin()){state.status='denied';return;}await subjectCatalog.load();await loadAbout();await loadStats();const results=await Promise.all(Object.keys(types).map(async type=>[type,await backend.cloudRead(type)]));if(epoch!==loadEpoch||backend.user()?.id!==owner)return;state.items=Object.fromEntries(results);state.status='ready';await loadUsersTab(state.type,ui);}catch(err){if(epoch!==loadEpoch)return;state.status='error';state.error=err.message;}finally{ui.render();}}
 export function renderAdmin(){const heading='<div class="heading"><div><span class="eyebrow">LEXAMAH ADMINISTRATION</span><h1>Your content command centre.</h1><p>Publish resources, manage study content and upload course files.</p></div><button class="btn" id="admin-refresh">Refresh</button></div>';
 if(state.status==='idle'||state.status==='loading')return heading+'<div class="empty"><h3>Checking administrator access…</h3><p>Access is verified with Supabase.</p></div>';
 if(state.status!=='ready'){const messages={signedout:['Sign in to manage shared content.','Use your username and password on the Log In page, then return here.'],denied:['Administrator access required.','Your account has not been added to lexamah_admins. Follow the setup guide to grant your own account access.'],error:['The admin dashboard needs setup.',state.error+' Run supabase/setup.sql in your Supabase SQL Editor, then refresh.']};const [title,description]=messages[state.status];return heading+`<div class="empty"><h3>${title}</h3><p>${e(description)}</p><button class="btn primary" data-route="login">Log In →</button></div>`;}

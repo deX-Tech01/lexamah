@@ -1,7 +1,7 @@
 export type Dependencies={env?:(key:string)=>string|undefined;fetch?:typeof fetch};
 export function server(req:Request,deps:Dependencies={}){
  const env=deps.env||((key:string)=>Deno.env.get(key));const fetcher=deps.fetch||fetch;
- const origins=(env('LEXAMAH_ALLOWED_ORIGINS')||'https://lexamah.modestbadge128.chatgpt.site,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,http://127.0.0.1:5500,http://localhost:8080,http://127.0.0.1:8080').split(',').map(x=>x.trim());const origin=req.headers.get('origin')||'';
+ const origins=(env('LEXAMAH_ALLOWED_ORIGINS')||'https://lexuniport.vercel.app,https://lexamah.modestbadge128.chatgpt.site,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5500,http://127.0.0.1:5500,http://localhost:8080,http://127.0.0.1:8080').split(',').map(x=>x.trim());const origin=req.headers.get('origin')||'';
  const headers={'Access-Control-Allow-Origin':origins.includes(origin)?origin:origins[0],'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info,prefer','Access-Control-Allow-Methods':'POST,OPTIONS','Vary':'Origin','Cache-Control':'no-store'};
  const reply=(status:number,data:unknown)=>new Response(JSON.stringify(data),{status,headers:{...headers,'Content-Type':'application/json'}});
  const blocked=origin&&!origins.includes(origin)?reply(403,{error:'This website origin is not allowed.'}):req.method==='OPTIONS'?new Response(null,{status:204,headers}):req.method!=='POST'?reply(405,{error:'Use POST.'}):null;

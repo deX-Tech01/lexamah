@@ -8,3 +8,17 @@
 .mission-card h2{font:30px var(--serif);margin:12px 0}.mission-copy{white-space:pre-wrap;font-size:15px;line-height:1.9;max-width:850px}.founder-card img{width:100%;height:240px;object-fit:cover;border-radius:8px}.founder-card h3{font:24px var(--serif);margin:20px 0 10px}.founder-card p{white-space:pre-wrap;color:var(--muted);line-height:1.8}.founder-initial{height:160px;display:grid;place-items:center;background:var(--soft);font:60px var(--serif);border-radius:8px}.contributors-list{columns:2;line-height:2;list-style-position:inside;padding:0}@media(max-width:650px){.contributors-list{columns:1}}
 
 .portrait-preview{display:block;width:100%;max-width:400px;aspect-ratio:4/3;background:var(--soft);border:1px solid var(--line);border-radius:8px;margin:18px auto}.founder-card img{height:auto;aspect-ratio:4/3;background:var(--soft)}
+
+/* Registered user management */
+.user-record{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 0;border-bottom:1px solid var(--border,#e5e7eb)}
+.user-record p{margin:8px 0;overflow-wrap:anywhere}.mail-preview{white-space:pre-wrap;max-height:300px;overflow:auto;overflow-wrap:anywhere}
+@media(max-width:600px){.user-record{align-items:flex-start;flex-direction:column}}
+
+/* Immediate navigation collapse on desktop and mobile. */
+#menu{display:grid}#sidebar{transition:transform .2s;overflow-y:auto}#shell{transition:margin-left .2s}
+@media(min-width:901px){body.sidebar-collapsed #sidebar{transform:translateX(-100%)}body.sidebar-collapsed #shell{margin-left:0}}
+[hidden]{display:none!important}
+.document-reader{min-height:250px}.document-reader #document-controls{position:sticky;top:0;background:var(--paper);padding:10px 0;z-index:1}
+#document-pages{overflow:auto;background:var(--bg);padding:12px;border-radius:12px}#document-pages canvas{display:block;margin:0 auto;max-width:100%;height:auto}
+.document-image{display:block;max-width:100%;height:auto;margin:auto}.document-reader .reader{white-space:pre-wrap;overflow-wrap:anywhere}
+#sidebar-close{position:absolute;top:5px;right:6px;width:28px;height:28px;font-size:22px}
