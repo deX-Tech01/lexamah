@@ -81,5 +81,5 @@ export async function watermarkDocument(file,options={}){
  const output=await doc.save();
  if(output.length>LIMIT)throw new Error('The watermarked PDF exceeds 50 MB. Compress the original and upload it again.');
  const base=file.name.replace(/\.[^.]+$/,'');
- return new File([output],`${base}-watermarked.pdf`,{type:'application/pdf',lastModified:Date.now()});
+ return new File([output],ext==='pdf'?file.name:`${base}.pdf`,{type:'application/pdf',lastModified:Date.now()});
 }
