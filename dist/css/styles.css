@@ -22,3 +22,8 @@
 #document-pages{overflow:auto;background:var(--bg);padding:12px;border-radius:12px}#document-pages canvas{display:block;margin:0 auto;max-width:100%;height:auto}
 .document-image{display:block;max-width:100%;height:auto;margin:auto}.document-reader .reader{white-space:pre-wrap;overflow-wrap:anywhere}
 #sidebar-close{position:absolute;top:5px;right:6px;width:28px;height:28px;font-size:22px}
+
+.watermark-editor{margin:22px 0;padding:18px;border:1px solid var(--line);border-radius:14px;min-width:0}
+.watermark-editor legend{font-weight:700;padding:0 8px}.watermark-editor input[type=range]{padding:0;accent-color:var(--green)}
+#watermark-layout{display:block;max-width:100%;width:225px;height:auto;margin:18px auto;border:1px solid var(--line);border-radius:8px}
+#watermark-document-preview canvas{display:block;max-width:100%;height:auto;margin:14px auto;border:1px solid var(--line)}
