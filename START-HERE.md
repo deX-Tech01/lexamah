@@ -63,7 +63,9 @@ Site name, logo/browser icon, default watermark and sign-up examples remain in B
 
 PDF watermarks apply to new/replacement uploads. Existing downloaded files and stamped PDFs are not rewritten by a settings change. Changing a site name does not change the domain or the database project.
 
-## Randomized quizzes
+## Quiz setup and randomized quizzes
+
+Before starting, the student chooses the number of questions (1 up to the available total) and the time limit (1–180 minutes). The timer starts on Begin quiz and auto-submits at expiry. Results count only the chosen questions. Cancel closes setup without starting an attempt. Setup wording is editable in Text & Appearance under Quizzes / Attempt setup.
 
 Every new attempt shuffles a COPY of that quiz's question bank. Retaking a quiz with at least two questions uses a different order from the last attempt. The same question does not repeat within an attempt. The original bank, answer choices and correct-answer indices stay aligned. A one-question quiz naturally has only one possible question order. Randomization works for built-in, older, personal and current shared quizzes. Existing attempts/results are retained.
 

@@ -2903,5 +2903,45 @@ export const copyCatalog={
   "site-editor.a5d0e9867cb6": {
     "text": "Site appearance saved.",
     "group": "Text & Appearance"
+  },
+  "quizSetup.title": {
+    "text": "Set up your quiz",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.available": {
+    "text": "questions available. Choose how many to practise.",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.count": {
+    "text": "Number of questions",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.time": {
+    "text": "Time limit (minutes)",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.help": {
+    "text": "Questions are selected randomly. Choose 1–180 minutes. The countdown starts when you begin, and the quiz submits automatically when time runs out.",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.begin": {
+    "text": "Begin quiz",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.cancel": {
+    "text": "Cancel",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.active": {
+    "text": "Finish or exit your current quiz before starting another.",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.empty": {
+    "text": "This quiz has no available questions yet.",
+    "group": "Quizzes / Attempt setup"
+  },
+  "quizSetup.accountChanged": {
+    "text": "Your account changed. Sign in and open the quiz again.",
+    "group": "Quizzes / Attempt setup"
   }
 };
