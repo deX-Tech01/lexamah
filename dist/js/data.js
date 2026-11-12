@@ -1,14 +1,16 @@
 // Built-in orientation content. Course-specific resources are added by the owner.
-export const subjects = [
-  "All subjects",
-  "Tort Law",
-  "Contract Law",
-  "Criminal Law",
-  "Constitutional Law",
-  "Legal Methods",
-  "Equity & Trusts",
+export const subjects=['All subjects','Tort Law','Contract Law','Criminal Law','Constitutional Law','Legal Methods','Equity & Trusts'];
+export const materials=[
+{id:'guide-case',title:'The case brief workbook',subject:'Legal Methods',type:'Study guide',description:'A repeatable framework for turning a judgment into a useful revision note.',body:'THE CASE BRIEF WORKBOOK\n\n1. Citation: copy the case name, court, date and report reference from the judgment.\n\n2. Material facts: identify the facts that matter to the issue.\n\n3. Procedural history: record how the case reached this court.\n\n4. Issue: turn the dispute into a precise question.\n\n5. Decision: state what the court decided.\n\n6. Reasoning: explain how the court reached its decision.\n\n7. Application: identify similarities and differences with your problem question.\n\nAlways work from the full judgment or your approved course materials. This workbook is a study framework, not a case summary.'},
+{id:'guide-revision',title:'From reading to recall',subject:'Legal Methods',type:'Study guide',description:'Build a focused revision routine with short, purposeful sessions.',body:'FROM READING TO RECALL\n\nChoose one topic and a clear outcome for your session.\n\nRead a small section of your approved material. Close it and explain the idea in your own words.\n\nCheck your explanation against the original. Mark gaps for review.\n\nWrite a short question on the front of a flashcard and a focused answer on the back.\n\nReview again later. Track completed sessions in Study Mode.\n\nKeep your own notes and verify citations before relying on them.'},
+{id:'guide-answer',title:'The problem-question planner',subject:'Legal Methods',type:'Worksheet',description:'Organize the issue, source, application and conclusion before you write.',body:'PROBLEM-QUESTION PLANNER\n\nIssue: What specific question does this fact pattern raise?\n\nSource: Which rule, statute or judgment in your course materials applies? Record the exact reference.\n\nApplication: Explain how each relevant fact supports or weakens your position. Consider competing arguments.\n\nConclusion: Answer the question, noting any uncertainty.\n\nRepeat for each separate issue. This is a writing worksheet, not a statement of substantive law.'}
 ];
-export const materials = [];
-export const quizSets = [];
-export const quizQuestions = [];
-export const flashcards = [];
+export const quizSets=[{id:'orientation',name:'Study foundations',subject:'Legal Methods',description:'Get comfortable with case briefs and purposeful revision.',time_minutes:5,difficulty:'Getting started'}];
+export const quizQuestions=[
+{id:'s1',quiz_set_id:'orientation',question:'Where should you verify the wording of a judgment?',options:['A social media caption','The full judgment or an approved source','An unrelated textbook','A guessed citation'],correct_index:1,explanation:'Use the full judgment or an approved source when recording a case.'},
+{id:'s2',quiz_set_id:'orientation',question:'Which part of a case brief states the question the court had to resolve?',options:['Issue','Cover page','Reading date','Personal timetable'],correct_index:0,explanation:'The issue frames the question the court had to resolve.'},
+{id:'s3',quiz_set_id:'orientation',question:'What makes a study session easier to evaluate?',options:['Leaving the goal undefined','Opening every subject at once','Choosing a specific learning outcome','Only tracking the page colour'],correct_index:2,explanation:'A specific outcome lets you check what you achieved.'},
+{id:'s4',quiz_set_id:'orientation',question:'After recalling a topic from memory, what should you do?',options:['Never check it','Compare it with your source and identify gaps','Delete your notes','Assume every detail is correct'],correct_index:1,explanation:'Checking your recall helps identify what needs further review.'},
+{id:'s5',quiz_set_id:'orientation',question:'What belongs in the source section of a problem-question planner?',options:['A verified rule or authority with its reference','Only your name','An unverified guess','The colour of the textbook'],correct_index:0,explanation:'Record an applicable source and an accurate reference.'}
+];
+export const flashcards=[{id:'f1',subject:'Legal Methods',front:'What are the main headings in a case brief?',back:'Citation, material facts, procedural history, issue, decision, reasoning and application.'},{id:'f2',subject:'Legal Methods',front:'What should you check before relying on a case citation?',back:'The exact case name, court, date and report reference against a reliable original or approved source.'},{id:'f3',subject:'Legal Methods',front:'How do you finish a focused revision session?',back:'Check your recall against the source, record gaps and choose your next review task.'}];

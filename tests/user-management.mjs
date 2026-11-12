@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {handler as account} from '../supabase/functions/admin-users/index.ts';
+import {handler as mail} from '../supabase/functions/admin-mail/index.ts';
+import {handler as download} from '../supabase/functions/content-download/index.ts';
+const id='11111111-1111-4111-8111-111111111111',job='22222222-2222-4222-8222-222222222222';
+let calls=[],active=true,admin=true,protectedAdmin=false,failedBan=false,providerStatus=200;
+const env={SUPABASE_URL:'https://test.supabase.co',SUPABASE_ANON_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'private',RESEND_API_KEY:'email-secret',LEXAMAH_MAIL_FROM:'LexAmah <hello@example.com>'};
+const deps={env:k=>env[k],fetch:async(url,options={})=>{calls.push({url,options});let data=null,status=200;
+if(url.endsWith('/auth/v1/user'))data={id:'administrator'};
+else if(url.includes('lexamah_account_active'))data=active;
+else if(url.includes('lexamah_is_admin'))data=admin;
+else if(url.includes('lexamah_admins?'))data=protectedAdmin?[{user_id:id}]:[];
+else if(url.includes('lexamah_profiles?'))data=options.method==='PATCH'?[]:[{username:'Student',disabled:false}];
+else if(url.includes('/auth/v1/admin/users/')){data={id};if(failedBan)status=500;}
+else if(url.includes('lexamah_mail_jobs?'))data=[{id:job,subject:'Announcement',message:'Hello',created_at:new Date().toISOString()}];
+else if(url.includes('lexamah_mail_recipients?'))data=options.method==='PATCH'?[]:[{email:'student@example.com',user_id:id}];
+else if(url.includes('lexamah_mail_counts'))data={total:1,sent:1,pending:0,failed:0,skipped:0};
+else if(url==='https://api.resend.com/emails'){status=providerStatus;data=status===200?{id:'provider-1'}:{message:'Rate limit'};}
+return new Response(JSON.stringify(data),{status});}};
+const req=body=>new Request('https://test.supabase.co/functions/v1/test',{method:'POST',headers:{Authorization:'Bearer token',origin:'http://localhost:3000'},body:JSON.stringify(body)});
+admin=false;assert.equal((await account(req({action:'delete',user_id:id,confirm:'Student'}),deps)).status,403);assert.equal((await mail(req({action:'send',job_id:job}),deps)).status,403);assert.ok(!calls.some(c=>c.url.includes('api.resend')||c.url.includes('/auth/v1/admin/')));
+admin=true;active=false;calls=[];assert.equal((await download(req({type:'local',code:'5Gsupport'}),deps)).status,401);assert.equal((await account(req({action:'disable',user_id:id}),deps)).status,401);assert.ok(!calls.some(c=>c.url.includes('/auth/v1/admin/')));
+active=true;protectedAdmin=true;assert.equal((await account(req({action:'delete',user_id:id,confirm:'Student'}),deps)).status,400);protectedAdmin=false;
+assert.equal((await account(req({action:'delete',user_id:id,confirm:'Wrong'}),deps)).status,400);
+calls=[];assert.equal((await account(req({action:'disable',user_id:id}),deps)).status,200);const patch=calls.findIndex(c=>c.options.method==='PATCH'),ban=calls.findIndex(c=>c.options.method==='PUT');assert.ok(patch<ban);assert.equal(JSON.parse(calls[patch].options.body).disabled,true);
+failedBan=true;assert.equal((await account(req({action:'disable',user_id:id}),deps)).status,502);failedBan=false;
+calls=[];assert.equal((await account(req({action:'enable',user_id:id}),deps)).status,200);assert.equal(JSON.parse(calls.find(c=>c.options.method==='PUT').options.body).ban_duration,'none');
+calls=[];assert.equal((await account(req({action:'delete',user_id:id,confirm:'Student'}),deps)).status,200);assert.ok(calls.some(c=>c.options.method==='DELETE'));
+calls=[];assert.equal((await mail(req({action:'send',job_id:job}),deps)).status,200);const send=calls.find(c=>c.url==='https://api.resend.com/emails');assert.deepEqual(JSON.parse(send.options.body).to,['student@example.com']);assert.ok(send.options.headers['Idempotency-Key'].includes(job));assert.ok(calls.some(c=>c.options.method==='PATCH'&&JSON.parse(c.options.body).status==='sent'));
+providerStatus=429;calls=[];const response=await mail(req({action:'send',job_id:job}),deps);assert.ok((await response.json()).paused);assert.ok(!calls.some(c=>c.options.method==='PATCH'));
+console.log('PASS: server admin checks, disabled session rejection, administrator protection, typed deletion, disable ordering, re-enable, private individual emails, duplicate protection and rate-limit pause.');

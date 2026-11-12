@@ -3,7 +3,20 @@ export async function handler(req:Request,deps:Dependencies={}){
  const s=server(req,deps);if(s.blocked)return s.blocked;
  try{const auth=await s.auth();if(!auth)return s.reply(401,{error:'Log in before downloading materials or lecture notes.'});
  let body;try{body=await s.json();}catch{return s.reply(400,{error:'Enter an access code.'});}
- if(typeof body.code!=='string'||body.code.trim()!==(s.env('LEXAMAH_DOWNLOAD_CODE')||'5Gsupport'))return s.reply(403,{error:'Incorrect access code. Please try again.'});
+ if(!s.url||!s.publicKey)return s.reply(503,{error:'Downloads are not configured.'});
+ const policyResponse=await s.fetcher(`${s.url}/rest/v1/lexamah_download_settings?id=eq.main&select=require_access_code`,{headers:s.apiHeaders(s.publicKey,auth.token),signal:AbortSignal.timeout(15000)});
+ if(!policyResponse.ok)return s.reply(503,{error:'Download settings are unavailable. Ask the administrator to run download-settings.sql.'});
+ const policies=await policyResponse.json();if(!Array.isArray(policies)||policies.length!==1||typeof policies[0].require_access_code!=='boolean')return s.reply(503,{error:'Download settings could not be verified. Please contact support.'});
+ if(policies[0].require_access_code){
+  const wrongCode=()=>s.reply(403,{error:'An access code is required. Enter the correct download access code.',code_required:true});
+  if(typeof body.code!=='string'||!body.code.trim())return wrongCode();
+  if(!s.secretKey)return s.reply(503,{error:'Downloads need the Supabase server environment keys.'});
+  const verification=await s.fetcher(`${s.url}/rest/v1/rpc/lexamah_verify_download_code`,{method:'POST',headers:s.apiHeaders(s.secretKey),body:JSON.stringify({p_code:body.code.trim()}),signal:AbortSignal.timeout(15000)});
+  if(!verification.ok)return s.reply(503,{error:'Download access-code settings are unavailable. Ask the administrator to run download-code-update.sql.'});
+  const verified=await verification.json();
+  if(verified!==true&&verified!==false&&verified!==null)return s.reply(503,{error:'The download access code could not be verified.'});
+  if(verified===false||(verified===null&&body.code.trim()!==(s.env('LEXAMAH_DOWNLOAD_CODE')||'5Gsupport')))return wrongCode();
+ }
  const success=async(payload:Record<string,unknown>)=>{if(s.secretKey&&s.url){try{await s.fetcher(`${s.url}/rest/v1/rpc/lexamah_record_download`,{method:'POST',headers:s.apiHeaders(s.secretKey),body:JSON.stringify({p_user_id:auth.user.id,p_resource_type:body.type,p_resource_id:body.id||null}),signal:AbortSignal.timeout(10000)});}catch{/* Downloads remain usable if tracking is unavailable. */}}return s.reply(200,payload);};
  if(body.type==='local')return success({authorized:true});
  const table=body.type==='materials'?'lexamah_materials':body.type==='lectureNotes'?'lexamah_lecture_notes':body.type==='cases'?'lexamah_cases':null;

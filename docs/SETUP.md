@@ -88,3 +88,39 @@ Create a Quiz set, then add questions with four options and the correct answer. 
 ## Verification
 
 Browser syntax and mocked workflow tests cover the revised signup/login forms, quiz auto-advancement, audio validation/playback, administrator operations, server username lookup and access-code downloads. No authenticated migration or deployment of the two Supabase functions was performed by the assistant. Apply the setup above and verify a real student login, audio upload/playback, correct-code download and incorrect-code rejection before student launch. Visual browser QA was unavailable in the build environment.
+
+## Subjects & Courses
+
+For an existing installed LexAmah database, copy supabase/subjects.sql into Supabase SQL Editor and run it once. New installations get this table from the complete setup.sql. Rerunning subjects.sql does not restore removed subjects.
+
+Open Admin Dashboard > Subjects. Enter a course name and select Add subject. To remove one, select Remove next to its name and confirm. Duplicate names are prevented without regard to letter case. Only approved administrators can change the catalog.
+
+Subjects are shared in Supabase and are used in the student resource filters, content creation forms, flashcards and Study Mode. Removing a subject removes it from available choices while preserving existing content and study records. Existing content remains visible under All subjects, and edit forms preserve its original subject until you choose another. If all subjects are removed, add one before creating new content. Other open sessions pick up changes on page refresh.
+
+When updating an existing VS Code copy, preserve your current dist/js/data.js if you already edited it to remove examples or customize content. The Subjects tab now controls shared course choices. Also preserve any local configuration changes. This ZIP includes the prior prefer-header CORS fix and support for port 3000 in the default allowed origins.
+
+Subject additions and removals were tested with mocked services. The assistant has not applied subjects.sql to your authenticated Supabase project.
+
+## About LexAmah — founders, contributors and mission
+
+For this update, add dist/js/about.js and replace app.js, admin.js and backend.js with their updated versions. Replace dist/css/styles.css for the founder-profile styling. Keep your customized data.js and existing project configuration.
+
+Run supabase/about.sql in SQL Editor once. It creates the public page record, an administrator-only editing policy and the public lexamah-portraits bucket for founder pictures. Your existing content is preserved. New installations get this through the complete setup.sql.
+
+Open Admin Dashboard > About LexAmah. Enter the mission, select Add founder, enter a name and bio, then upload a JPG/PNG/WebP image up to 5 MB or use an HTTPS picture URL. Add contributors one per line, optionally including their contribution. Select Publish changes. The About LexAmah page displays the published details for visitors. Founder details are intentionally left for you to enter.
+
+Founder pictures and About details are public. Old uploaded pictures remain in Supabase Storage if you replace a portrait or remove a founder profile; delete unwanted files from the lexamah-portraits bucket after checking they are no longer used.
+
+### Launch checks
+
+- Verify registration, email confirmation and username login with a new student account.
+- Test a regular student's access and confirm administrator editing is denied.
+- Verify material/lecture-note downloads with correct and incorrect codes.
+- Play, pause and seek an uploaded recording on desktop and mobile.
+- Complete a quiz, review its answers and verify the recorded result.
+- Set your final website origin in LEXAMAH_ALLOWED_ORIGINS for both Edge Functions and in Supabase Auth redirect URLs.
+- Add a support/contact route and privacy information covering account details, uploaded resources and public founder profiles.
+- Add password recovery before inviting a large student audience; the current login form does not include a recovery flow.
+- Review owner backups for database records and Storage files.
+
+Mocked About-page checks pass; the SQL and live picture uploads have not been executed against your authenticated Supabase project by the assistant. Browser visual QA is unavailable in this environment.

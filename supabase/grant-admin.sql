@@ -4,7 +4,7 @@
 do $$
 declare account_id uuid;
 begin
- select id into account_id from auth.users where lower(email)=lower('Chimdike247@gmail.com');
+ select id into account_id from auth.users where lower(email)=lower('YOUR_EMAIL_ADDRESS');
  if account_id is null then
   raise exception 'No account found. Replace YOUR_EMAIL_ADDRESS with your signup email, or create the account first.';
  end if;

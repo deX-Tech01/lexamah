@@ -1,3 +1,4 @@
+import {defaultWatermark} from './brand-state.js';
 // Watermarks are embedded in the stored PDF, not overlaid only in the viewer.
 const LIMIT=50*1024*1024;
 let libraryFlight;
@@ -6,7 +7,7 @@ export async function pdfLibrary(){
  if(!libraryFlight)libraryFlight=import('../vendor/pdf-lib/pdf-lib.min.js').then(()=>{if(!globalThis.PDFLib)throw new Error('PDF tools could not load. Refresh and try again.');return globalThis.PDFLib;}).catch(err=>{libraryFlight=null;throw err;});
  return libraryFlight;
 }
-export function watermarkText(value='LexAmah'){
+export function watermarkText(value=defaultWatermark()){
  const text=String(value).trim();
  if(!text||text.length>60||!/^[\x20-\x7e]+$/.test(text))throw new Error('Use 1–60 plain English letters, numbers or punctuation for the watermark.');
  return text;
@@ -14,7 +15,7 @@ export function watermarkText(value='LexAmah'){
 export function watermarkSettings(raw={}){
  const number=(key,fallback,min,max)=>{const value=raw[key]===undefined?fallback:Number(raw[key]);if(!Number.isFinite(value)||value<min||value>max)throw new Error(`Invalid watermark ${key}. Use ${min}–${max}.`);return value;};
  const mode=raw.mode||'text';if(!['text','image'].includes(mode))throw new Error('Choose a text or logo watermark.');
- return {mode,text:mode==='text'?watermarkText(raw.text===undefined?'LexAmah':raw.text):'LexAmah',x:number('x',50,0,100),y:number('y',50,0,100),size:number('size',55,5,90),opacity:number('opacity',18,1,100),rotation:number('rotation',35,-90,90)};
+ return {mode,text:mode==='text'?watermarkText(raw.text===undefined?defaultWatermark():raw.text):defaultWatermark(),x:number('x',50,0,100),y:number('y',50,0,100),size:number('size',55,5,90),opacity:number('opacity',18,1,100),rotation:number('rotation',35,-90,90)};
 }
 // Work in the visible, rotated page's coordinates, then map back to PDF coordinates.
 export function watermarkPlacement(box,rotation,ratio,settings){

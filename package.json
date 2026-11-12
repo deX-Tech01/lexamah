@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check dist/js/app.js && node --check dist/js/backend.js && node --check dist/js/store.js && node --check dist/js/data.js && node --check dist/js/admin.js && node --check dist/js/audio.js && node --check dist/js/downloads.js",
-    "test": "node tests/workflows.mjs && node tests/admin.mjs && node tests/accounts-downloads.mjs && node tests/audio.mjs"
+    "check": "node scripts/check.mjs",
+    "test": "node tests/workflows.mjs && node tests/admin.mjs && node tests/accounts-downloads.mjs && node tests/audio.mjs && node tests/subjects.mjs && node tests/about.mjs && node tests/launch-tools.mjs && node tests/user-management.mjs && node tests/security.mjs && node tests/watermark.mjs && node tests/download-settings.mjs && node tests/branding.mjs && node tests/site-editor.mjs && node tests/quiz-order.mjs"
   }
 }
