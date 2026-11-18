@@ -1,28 +1,114 @@
-import {copyHTML,copyRaw} from './site-copy.js';
+import {copyHTML, copyRaw} from './site-copy.js';
 import {backend} from './backend.js';
 import {escape as e} from './store.js';
-let generation=0,cleanup=()=>{};
-export function closeReader(){generation++;cleanup();cleanup=()=>{};}
-async function readBytes(url){const response=await fetch(url,{referrerPolicy:'no-referrer'});if(!response.ok)throw new Error(copyRaw("document-reader.f693ced343c6"));if(Number(response.headers.get('content-length'))>50*1024*1024)throw new Error(copyRaw("document-reader.02579859ef0c"));const bytes=await response.arrayBuffer();if(bytes.byteLength>50*1024*1024)throw new Error(copyRaw("document-reader.02579859ef0c"));return bytes;}
-export async function showDocument(item,type,ui){if(!backend.user())throw new Error(copyRaw("document-reader.9d6cc2043fe4"));closeReader();const stamp=generation,owner=backend.user().id;
- ui.modal(item.title||'Document',`<div id="document-reader" class="document-reader"><p id="document-status" role="status">${copyHTML("document-reader.aa46ebd38538")}</p><div id="document-controls" class="actions"></div><div id="document-pages"></div></div>`);
- const status=document.querySelector('#document-status'),pages=document.querySelector('#document-pages'),controls=document.querySelector('#document-controls');document.querySelector('#dialog').addEventListener('close',closeReader,{once:true});const current=()=>stamp===generation&&backend.user()?.id===owner;let notified=false;const viewed=()=>{if(current()&&!notified){notified=true;ui.onRead?.();}};
- try{const result=item.lexamah_cloud?await backend.viewDocument(type,item.id):{text:item.body||item.content||'',url:item.url,mime_type:item.mime_type,fileName:item.file_name};if(!current())return;
- if(!result.url){pages.innerHTML=`<div class="reader">${e(result.text||'No document is attached to this resource yet.')}</div>`;status.textContent=copyRaw("document-reader.bc34ad4a9d8c");if(result.text)viewed();return;}
- const url=new URL(result.url);if(!['https:','http:'].includes(url.protocol))throw new Error(copyRaw("document-reader.d53e52eb82fa"));const bytes=await readBytes(url.href);if(!current())return;
- const name=String(result.fileName||url.pathname).toLowerCase(),mime=result.mime_type||'';
- if(mime==='application/pdf'||name.endsWith('.pdf')){
-  const pdfjs=await import('../vendor/pdfjs/build/pdf.mjs');if(!current())return;
-  pdfjs.GlobalWorkerOptions.workerSrc=new URL('../vendor/pdfjs/build/pdf.worker.mjs',import.meta.url).href;
-  const task=pdfjs.getDocument({data:new Uint8Array(bytes),isEvalSupported:false,cMapUrl:new URL('../vendor/pdfjs/cmaps/',import.meta.url).href,cMapPacked:true,standardFontDataUrl:new URL('../vendor/pdfjs/standard_fonts/',import.meta.url).href});cleanup=()=>{task.destroy();};const pdf=await task.promise;if(!current())return;
-  let index=1,zoom=1,busy=false;controls.innerHTML=`<button class="btn" id="doc-prev">${copyHTML("document-reader.435567b14289")}</button><span id="doc-count"></span><button class="btn" id="doc-next">${copyHTML("document-reader.bcf0489a7b45")}</button><button class="btn" id="doc-minus" aria-label="${copyHTML("document-reader.bc7b631a689b")}">−</button><button class="btn" id="doc-plus" aria-label="${copyHTML("document-reader.0e47f09a748f")}">+</button>`;
-  const paint=async()=>{if(busy||!current())return;busy=true;controls.querySelectorAll('button').forEach(b=>b.disabled=true);try{const page=await pdf.getPage(index);if(!current())return;const viewport=page.getViewport({scale:Math.min(1.6,Math.max(.5,(pages.clientWidth||650)/page.getViewport({scale:1}).width))*zoom});const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);canvas.setAttribute('aria-label',`Document page ${index}`);pages.replaceChildren(canvas);await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;if(!current())return;document.querySelector('#doc-count').textContent=`Page ${index} of ${pdf.numPages}`;status.textContent=copyRaw("document-reader.bc34ad4a9d8c");viewed();}catch(err){if(current())status.textContent=err.message;}finally{busy=false;if(current()){controls.querySelectorAll('button').forEach(b=>b.disabled=false);document.querySelector('#doc-prev').disabled=index===1;document.querySelector('#doc-next').disabled=index===pdf.numPages;}}};
-  document.querySelector('#doc-prev').onclick=()=>{if(index>1&&!busy){index--;paint();}};document.querySelector('#doc-next').onclick=()=>{if(index<pdf.numPages&&!busy){index++;paint();}};document.querySelector('#doc-minus').onclick=()=>{zoom=Math.max(.5,zoom-.2);paint();};document.querySelector('#doc-plus').onclick=()=>{zoom=Math.min(2,zoom+.2);paint();};await paint();
- }else if(mime.includes('wordprocessingml')||name.endsWith('.docx')){
-  if(!window.mammoth)await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=new URL('../vendor/mammoth/mammoth.browser.min.js',import.meta.url).href;script.onload=resolve;script.onerror=()=>reject(new Error(copyRaw("document-reader.55c3b9d2cbd5")));document.head.appendChild(script);});
-  const text=await window.mammoth.extractRawText({arrayBuffer:bytes});if(current()){pages.innerHTML=`<div class="reader">${e(text.value)}</div>`;status.textContent=copyRaw("document-reader.e74b919980c7");viewed();}
- }else if(mime.startsWith('image/')||/\.(png|jpe?g)$/.test(name)){const imageURL=URL.createObjectURL(new Blob([bytes],{type:mime||'image/png'}));cleanup=()=>URL.revokeObjectURL(imageURL);pages.innerHTML=`<img class="document-image" src="${e(imageURL)}" alt="${e(item.title)}" draggable="false">`;status.textContent=copyRaw("document-reader.bc34ad4a9d8c");viewed();}
- else if(mime==='text/plain'||name.endsWith('.txt')){pages.innerHTML=`<div class="reader">${e(new TextDecoder().decode(bytes))}</div>`;status.textContent=copyRaw("document-reader.bc34ad4a9d8c");viewed();}
- else throw new Error(copyRaw("document-reader.c8a321809534"));
- }catch(err){if(current())status.textContent=err.message||'Document could not be opened.';}
+import {mountPDF} from './pdf-viewer.js';
+
+const MAX_BYTES=50*1024*1024;
+let active=null,wordReader=null;
+export function closeReader(){
+ const reader=active;
+ if(!reader)return;
+ active=null;
+ reader.controller.abort();
+ if(reader.dialog.open)reader.dialog.close();
+ reader.dialog.remove();
+}
+async function readFile(url,signal){
+ const response=await fetch(url,{referrerPolicy:'no-referrer',signal});
+ if(!response.ok)throw new Error(copyRaw('document-reader.f693ced343c6'));
+ if(Number(response.headers.get('content-length'))>MAX_BYTES)throw new Error(copyRaw('document-reader.02579859ef0c'));
+ const bytes=new Uint8Array(await response.arrayBuffer());
+ if(bytes.byteLength>MAX_BYTES)throw new Error(copyRaw('document-reader.02579859ef0c'));
+ return {bytes,contentType:response.headers.get('content-type')?.split(';')[0]||''};
+}
+function loadWordReader(){
+ if(window.mammoth)return Promise.resolve(window.mammoth);
+ if(!wordReader)wordReader=new Promise((resolve,reject)=>{
+  const script=document.createElement('script');
+  script.src=new URL('../vendor/mammoth/mammoth.browser.min.js',import.meta.url).href;
+  script.onload=()=>resolve(window.mammoth);
+  script.onerror=()=>reject(new Error(copyRaw('document-reader.55c3b9d2cbd5')));
+  document.head.append(script);
+ }).catch(error=>{wordReader=null;throw error;});
+ return wordReader;
+}
+export async function showDocument(item,type,{onRead}={}){
+ const owner=backend.user()?.id;
+ if(!owner||backend.recoveryReady())throw new Error(copyRaw('document-reader.9d6cc2043fe4'));
+ closeReader();
+ const source=document.activeElement;
+ const dialog=document.createElement('dialog');
+ dialog.className='resource-reader';
+ dialog.setAttribute('aria-labelledby','reader-title');
+ dialog.innerHTML=`<div class="reader-top">
+  <button type="button" class="btn reader-back" aria-label="${copyHTML('reader.close')}" autofocus>← <span>${copyHTML('reader.back')}</span></button>
+  <h2 id="reader-title">${e(item.title||copyRaw('reader.document'))}</h2>
+ </div>
+ <div class="reader-tools"></div>
+ <p class="reader-status" role="status">${copyHTML('document-reader.aa46ebd38538')}</p>
+ <div id="document-pages" class="reader-scroll" tabindex="0" role="region" aria-label="${copyHTML('reader.pages')}"></div>`;
+ const controller=new AbortController(),reader={controller,dialog};
+ const {signal}=controller;
+ active=reader;
+ const current=()=>active===reader&&!signal.aborted&&backend.user()?.id===owner;
+ dialog.addEventListener('close',()=>{
+  if(active===reader)closeReader();
+  if(backend.user()?.id===owner&&source?.isConnected)source.focus();
+ },{once:true});
+ dialog.querySelector('.reader-back').onclick=closeReader;
+ document.body.append(dialog);dialog.showModal();
+ const status=dialog.querySelector('.reader-status'),scroll=dialog.querySelector('.reader-scroll'),controls=dialog.querySelector('.reader-tools');
+ let viewed=false;
+ const ready=message=>{
+  if(!current())return;
+  status.textContent=message||'';status.hidden=!message;
+  if(!viewed){viewed=true;onRead?.();}
+ };
+ function showText(value){
+  const page=document.createElement('div');page.className='reader reader-text';page.textContent=value;
+  scroll.replaceChildren(page);
+ }
+ try{
+  const result=item.lexamah_cloud?await backend.viewDocument(type,item.id,signal):{text:item.body||item.content||'',url:item.url,mime_type:item.mime_type,fileName:item.file_name};
+  if(!current())return;
+  const link=result.url||(!item.storage_path?item.url:'');
+  if(!link){
+   showText(result.text||copyRaw('reader.noDocument'));
+   if(result.text)ready();else status.hidden=true;
+   return;
+  }
+  const url=new URL(link);
+  if(!['https:','http:'].includes(url.protocol))throw new Error(copyRaw('document-reader.d53e52eb82fa'));
+  const {bytes,contentType}=await readFile(url.href,signal);
+  if(!current())return;
+  const name=String(result.fileName||url.pathname).toLowerCase(),mime=result.mime_type||contentType,
+   pdfHeader=new TextDecoder().decode(bytes.subarray(0,1024)).includes('%PDF-');
+  if(pdfHeader||mime==='application/pdf'||name.endsWith('.pdf')){
+   const pdfjs=await import('../vendor/pdfjs/build/pdf.mjs');
+   if(!current())return;
+   pdfjs.GlobalWorkerOptions.workerSrc=new URL('../vendor/pdfjs/build/pdf.worker.mjs',import.meta.url).href;
+   const task=pdfjs.getDocument({data:bytes,isEvalSupported:false,cMapUrl:new URL('../vendor/pdfjs/cmaps/',import.meta.url).href,cMapPacked:true,standardFontDataUrl:new URL('../vendor/pdfjs/standard_fonts/',import.meta.url).href});
+   signal.addEventListener('abort',()=>{task.destroy().catch(()=>{});},{once:true});
+   const pdf=await task.promise;
+   if(!current())return;
+   await mountPDF(pdf,{scroll,controls,signal,onReady:()=>ready(copyRaw('reader.gestures')),onError:()=>{
+    if(current()){status.hidden=false;status.textContent=copyRaw('reader.failedPage');}
+   }});
+  }else if(mime.includes('wordprocessingml')||name.endsWith('.docx')){
+   const mammoth=await loadWordReader();
+   if(!current())return;
+   const text=await mammoth.extractRawText({arrayBuffer:bytes.buffer});
+   if(current()){showText(text.value);ready(copyRaw('document-reader.e74b919980c7'));}
+  }else if(mime.startsWith('image/')||/\.(png|jpe?g)$/.test(name)){
+   const src=URL.createObjectURL(new Blob([bytes],{type:mime||'image/png'}));
+   signal.addEventListener('abort',()=>URL.revokeObjectURL(src),{once:true});
+   const img=document.createElement('img');img.src=src;img.alt=item.title||copyRaw('reader.document');img.className='document-image';img.draggable=false;
+   scroll.replaceChildren(img);ready();
+  }else if(mime==='text/plain'||name.endsWith('.txt')){
+   showText(new TextDecoder().decode(bytes));ready();
+  }else throw new Error(copyRaw('document-reader.c8a321809534'));
+ }catch(error){
+  if(!current())return;
+  status.hidden=false;status.textContent=error.message||copyRaw('reader.failedPage');
+ }
 }

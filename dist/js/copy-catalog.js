@@ -2943,5 +2943,337 @@ export const copyCatalog={
   "quizSetup.accountChanged": {
     "text": "Your account changed. Sign in and open the quiz again.",
     "group": "Quizzes / Attempt setup"
+  },
+  "reader.page": {
+    "text": "Page",
+    "group": "Reader / Full screen"
+  },
+  "reader.previous": {
+    "text": "Previous page",
+    "group": "Reader / Full screen"
+  },
+  "reader.next": {
+    "text": "Next page",
+    "group": "Reader / Full screen"
+  },
+  "reader.zoomOut": {
+    "text": "Zoom out",
+    "group": "Reader / Full screen"
+  },
+  "reader.zoomIn": {
+    "text": "Zoom in",
+    "group": "Reader / Full screen"
+  },
+  "reader.fitWidth": {
+    "text": "Fit width",
+    "group": "Reader / Full screen"
+  },
+  "reader.fitPage": {
+    "text": "Fit page",
+    "group": "Reader / Full screen"
+  },
+  "reader.close": {
+    "text": "Close reader",
+    "group": "Reader / Full screen"
+  },
+  "reader.back": {
+    "text": "Back",
+    "group": "Reader / Full screen"
+  },
+  "reader.document": {
+    "text": "Document",
+    "group": "Reader / Full screen"
+  },
+  "reader.pages": {
+    "text": "Document pages",
+    "group": "Reader / Full screen"
+  },
+  "reader.gestures": {
+    "text": "Pinch to zoom. Drag to move around the page.",
+    "group": "Reader / Full screen"
+  },
+  "reader.failedPage": {
+    "text": "This page could not be displayed. Try reopening the document.",
+    "group": "Reader / Full screen"
+  },
+  "reader.noDocument": {
+    "text": "No document is attached to this resource yet.",
+    "group": "Reader / Full screen"
+  },
+  "tips.adminTab": {
+    "text": "Share Tips",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.eyebrow": {
+    "text": "STUDENT COMMUNITY",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.intro": {
+    "text": "Share what has helped you study law, and see what works for other students.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.write": {
+    "text": "Write a tip",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.composeHelp": {
+    "text": "Give your tip a short title and explain how it helped you. Your username will appear on the post.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.title": {
+    "text": "Title",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.body": {
+    "text": "Your tip",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.publish": {
+    "text": "Publish tip",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.refresh": {
+    "text": "Refresh",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.read": {
+    "text": "Read tip",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.oneLike": {
+    "text": "like",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.oneComment": {
+    "text": "comment",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.likes": {
+    "text": "likes",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.comments": {
+    "text": "comments",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.loading": {
+    "text": "Loading tips…",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.empty": {
+    "text": "No tips have been shared yet.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.emptyHint": {
+    "text": "Share a study habit, revision method, or lesson from your own law school journey.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.older": {
+    "text": "Load older tips",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.back": {
+    "text": "Back to tips",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.like": {
+    "text": "Like",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.liked": {
+    "text": "Liked",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.commentsHeading": {
+    "text": "Comments",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.addComment": {
+    "text": "Write a comment",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.sendComment": {
+    "text": "Post comment",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.noComments": {
+    "text": "No comments yet.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.olderComments": {
+    "text": "Load older comments",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.delete": {
+    "text": "Delete tip",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.deleteComment": {
+    "text": "Delete comment",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.cancel": {
+    "text": "Cancel",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.removeTitle": {
+    "text": "Delete this tip?",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.removeText": {
+    "text": "This removes the tip, its likes, and its comments.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.removeCommentTitle": {
+    "text": "Delete this comment?",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.removeCommentText": {
+    "text": "This comment will be removed from the discussion.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.error": {
+    "text": "The request could not be completed.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.settings": {
+    "text": "Tips section settings",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.settingsHelp": {
+    "text": "Rename the section or hide it from students. Turning it off keeps existing tips and comments.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.on": {
+    "text": "Active",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.off": {
+    "text": "Inactive",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.sectionName": {
+    "text": "Section name",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.activate": {
+    "text": "Show this section to students",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.save": {
+    "text": "Save settings",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.moderation": {
+    "text": "Manage posts",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.saved": {
+    "text": "Tips settings saved.",
+    "group": "Share Tips / Student blog"
+  },
+  "tips.upgrade": {
+    "text": "Run share-tips-assistants-update.sql in Supabase to enable this feature.",
+    "group": "Share Tips / Student blog"
+  },
+  "team.title": {
+    "text": "Admin Team",
+    "group": "Admin / Content assistants"
+  },
+  "team.desk": {
+    "text": "Content Desk",
+    "group": "Admin / Content assistants"
+  },
+  "team.deskHelp": {
+    "text": "Add and manage your own materials, lecture notes, recordings, cases and flashcards.",
+    "group": "Admin / Content assistants"
+  },
+  "team.help": {
+    "text": "Add an existing account by username. Assistants can manage their own shared resources. Only the main admin can manage the team.",
+    "group": "Admin / Content assistants"
+  },
+  "team.username": {
+    "text": "Account username",
+    "group": "Admin / Content assistants"
+  },
+  "team.add": {
+    "text": "Add assistant",
+    "group": "Admin / Content assistants"
+  },
+  "team.members": {
+    "text": "Content assistants",
+    "group": "Admin / Content assistants"
+  },
+  "team.loading": {
+    "text": "Loading assistants…",
+    "group": "Admin / Content assistants"
+  },
+  "team.disabled": {
+    "text": "Account disabled",
+    "group": "Admin / Content assistants"
+  },
+  "team.assistant": {
+    "text": "Content assistant",
+    "group": "Admin / Content assistants"
+  },
+  "team.empty": {
+    "text": "No assistants have been added yet.",
+    "group": "Admin / Content assistants"
+  },
+  "team.dismiss": {
+    "text": "Dismiss assistant",
+    "group": "Admin / Content assistants"
+  },
+  "team.added": {
+    "text": "Assistant access granted.",
+    "group": "Admin / Content assistants"
+  },
+  "team.dismissTitle": {
+    "text": "Dismiss this assistant?",
+    "group": "Admin / Content assistants"
+  },
+  "team.dismissHelp": {
+    "text": "Remove content management access for",
+    "group": "Admin / Content assistants"
+  },
+  "team.dismissKeep": {
+    "text": "Their account and published resources will stay.",
+    "group": "Admin / Content assistants"
+  },
+  "team.dismissed": {
+    "text": "Assistant access removed.",
+    "group": "Admin / Content assistants"
+  },
+  "performance.timeout": {
+    "text": "This request took too long. Check your connection and try again.",
+    "group": "Pages / Loading and connection"
+  },
+  "performance.loadingResources": {
+    "text": "Loading shared resources…",
+    "group": "Pages / Loading and connection"
+  },
+  "performance.loadingAdmin": {
+    "text": "Opening the admin workspace…",
+    "group": "Pages / Loading and connection"
+  },
+  "performance.libraryError": {
+    "text": "Some shared resources could not load.",
+    "group": "Pages / Loading and connection"
+  },
+  "performance.retry": {
+    "text": "Try again",
+    "group": "Pages / Loading and connection"
+  },
+  "performance.loadingRecordings": {
+    "text": "Loading recordings…",
+    "group": "Pages / Loading and connection"
+  },
+  "performance.loadingMaterials": {
+    "text": "Loading materials…",
+    "group": "Pages / Loading and connection"
+  },
+  "performance.emptyMaterials": {
+    "text": "No materials have been shared yet.",
+    "group": "Pages / Loading and connection"
   }
 };

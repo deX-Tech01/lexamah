@@ -1,12 +1,12 @@
 # LexAmah — complete website package
 
-This is the full current website project, including the earlier account/security, upload, watermark, branding and download-code updates. You do not need to apply the older ZIPs separately.
+This is the full current website project, including the earlier account/security, upload, watermark, branding and download-code updates, plus the full-screen reader, Share Tips, content assistants and faster sign-in. You do not need to apply the older ZIPs separately.
 
 ## Use it with your EXISTING live project
 
 1. Extract the ZIP. Inside is the LexAmah folder, containing dist, supabase, docs, scripts and package.json.
 2. Keep a copy of your existing local project. Copy the contents of this LexAmah folder into your EXISTING Git project root, merging matching folders and replacing matching project files. Keep your existing .git directory and any personal images/assets folders. Do not create a fresh Supabase project.
-3. In your existing Supabase project, open SQL Editor > New query. Paste ALL of supabase/COMPLETE-INSTALL-OR-UPGRADE.sql and click Run. This is the only database file to run for the complete update; it already contains the earlier migrations and the new editor setup. Do not run all the smaller SQL files afterward.
+3. In your existing Supabase project, open SQL Editor > New query. Paste ALL of supabase/COMPLETE-INSTALL-OR-UPGRADE.sql and click Run. This is the only database file to run for the complete update; it already contains the earlier migrations and the new Share Tips and content assistant setup. Do not run all the smaller SQL files afterward.
 4. Open a VS Code terminal in that existing project root, where package.json and supabase are located. Deploy all included server functions:
 
 ```bash
@@ -20,7 +20,7 @@ The handlers perform account/admin checks internally. This deploys account-login
 
 ```bash
 git add .
-git commit -m "Install complete admin editor and randomized quizzes"
+git commit -m "Update reader, Share Tips and admin team"
 git push
 ```
 
@@ -69,9 +69,23 @@ Before starting, the student chooses the number of questions (1 up to the availa
 
 Every new attempt shuffles a COPY of that quiz's question bank. Retaking a quiz with at least two questions uses a different order from the last attempt. The same question does not repeat within an attempt. The original bank, answer choices and correct-answer indices stay aligned. A one-question quiz naturally has only one possible question order. Randomization works for built-in, older, personal and current shared quizzes. Existing attempts/results are retained.
 
+## Full-screen reader, Share Tips and Admin Team
+
+Open a material or lecture note with **Read notes**. Scroll through the entire PDF, pinch to zoom on a touch screen, or use the zoom and fit controls. Downloading still uses the existing download policy.
+
+In **Admin Dashboard → Share Tips**, set the section name, enable it and save. Students see it in their sidebar only while it is active. Turning it off hides it and keeps the posts. The blog is text only.
+
+In **Admin Dashboard → Admin Team**, enter a registered user's username to appoint them. An appointed user can open **Content Desk** to add and manage their own materials, lecture notes, recordings, cases and flashcards. Dismissal removes staff access, while the account and published resources stay. Main admins retain their existing permissions. Staff sessions still share the two-session limit, with at most one assistant active at a time.
+
+See `docs/READER-SHARE-TIPS-ADMIN-TEAM.md` for instructions if you are applying only this update to an already working site.
+
 ## New project instead of an existing one
 
 The included public connection currently points to your existing Supabase project. For a different project, change the public URL/key in dist/js/backend.js and the project reference in the deploy command/config.toml. Run the same COMPLETE-INSTALL-OR-UPGRADE.sql once. Configure Supabase Authentication site/redirect URLs for your actual website. Register and confirm an app account, then follow supabase/grant-admin.sql with that account's exact email. Never put a service-role/secret key in browser JavaScript.
+
+## Faster sign-in
+
+The sign-in screen opens before appearance settings finish loading. The dashboard opens after the password and access checks, and learning resources load as you use each section. The speed update requires no additional SQL or Edge Function deployment if the previous full release is already installed. See `docs/FASTER-LOGIN.md` for the speed-only update.
 
 ## Local preview and tests
 

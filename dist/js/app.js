@@ -1,11 +1,10 @@
+import {tipsPage,bindTips,resetTips,hideTips} from './share-tips.js';
 import {validateQuizSetup,selectQuizQuestions} from './quiz-setup.js';
-import {loadSiteEditor} from './site-editor.js';
 import {applyStaticCopy} from './site-copy.js';
 import {copyHTML,copyRaw} from './site-copy.js';
 import {loadLibraryOverrides,resetLibraryOverrides,applyLibraryOverrides,builtinResources} from './library-overrides.js';
 import {brandName,brandHTML,signupExample} from './brand-state.js';
 import {loadBranding,applyBranding} from './branding.js';
-import {showDocument,closeReader} from './document-reader.js';
 import {syncAccount,pauseSync,flushProgress} from './progress-sync.js';
 import {store,escape as e,download} from './store.js';
 import * as seed from './data.js';
@@ -14,21 +13,30 @@ import {forgotPage,resetPage,bindRecovery,handleRecoveryLink} from './recovery.j
 import {trackVisit} from './analytics.js';
 import {loadAbout,aboutPage,supportPage} from './about.js';
 import {subjectCatalog} from './subjects.js';
-import {initAdmin,resetAdmin,loadAdmin,renderAdmin,bindAdmin,adminClick} from './admin.js';
+import {createSharedLibrary} from './shared-library.js';
 import {initAudio,playRecording,isAudioRecording,syncAudioButtons,stopAudio} from './audio.js';
 import {initDownloads,requestDownload} from './downloads.js';
 const $=s=>document.querySelector(s);
 const paths={dashboard:'M3 10 12 3l9 7M5 9v12h5v-7h4v7h5V9',materials:'M4 3h12l4 4v14H4zM15 3v5h5M8 12h8M8 16h6',lectures:'M3 5h18v14H3zM10 9l5 3-5 3z',quiz:'M9 3h6v4H9zM8 5H5v16h14V5h-3M8 12h8M8 16h5',cases:'M12 3v18M6 21h12M4 7h16M6 7l-4 8h8L6 7zm12 0-4 8h8l-4-8z',study:'M12 8v5l3 2M9 2h6M12 2v3M20 5l-2 2M12 5a8 8 0 1 0 0 16 8 8 0 0 0 0-16',flashcards:'M5 6h16v15H5zM2 18V3h16',progress:'M4 21V12M10 21V7M16 21V3M2 21h20',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2',arrow:'M5 12h14M14 7l5 5-5 5',calendar:'M4 5h16v16H4zM4 9h16M8 2v6M16 2v6',book:'M3 4h7l2 2 2-2h7v16h-7l-2 2-2-2H3zM12 6v16',bookmark:'M6 3h12v18l-6-4-6 4z'};
 const icon=name=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]||paths.book}"/></svg>`;
-const routes={get "dashboard"(){return copyRaw("app.67b696468610");},get "materials"(){return copyRaw("app.fd10a146e962");},get "lectures"(){return copyRaw("app.95f7caf5f942");},get "quiz"(){return copyRaw("app.f1e638bae6e8");},get "cases"(){return copyRaw("app.cfa58208ab50");},get "study"(){return copyRaw("app.a590241bd5ce");},get "flashcards"(){return copyRaw("app.eac4b70868b6");},get "progress"(){return copyRaw("app.ac4aee882dc3");},get "settings"(){return copyRaw("app.74a883a037bc");},get "studio"(){return copyRaw("app.06c85ff37596");},get "support"(){return copyRaw("app.aea69e9d7676");},get "about"(){return copyRaw("app.4efca0d10c5f");},get "admin"(){return copyRaw("app.66d1605446f4");},get "signup"(){return copyRaw("app.47de23586e49");},get "login"(){return copyRaw("app.2ded4a3ee653");},get "forgot"(){return copyRaw("app.93982d33c506");},get "reset"(){return copyRaw("app.4e70f1fd24ba");}};
-let route='dashboard',filter='',subject='All subjects',remote={},flashIndex=0,flashBack=false,quiz=null,quizTimer=null,focusTimer=null,focusSeconds=1500,focusRemaining=1500,focusRunning=false,focusEnd=0,focusSubject='Legal Methods',materialKind='all';
+const routes={get "dashboard"(){return copyRaw("app.67b696468610");},get "materials"(){return copyRaw("app.fd10a146e962");},get "lectures"(){return copyRaw("app.95f7caf5f942");},get "quiz"(){return copyRaw("app.f1e638bae6e8");},get "cases"(){return copyRaw("app.cfa58208ab50");},get "study"(){return copyRaw("app.a590241bd5ce");},get "flashcards"(){return copyRaw("app.eac4b70868b6");},get "progress"(){return copyRaw("app.ac4aee882dc3");},get "settings"(){return copyRaw("app.74a883a037bc");},get "studio"(){return copyRaw("app.06c85ff37596");},get "support"(){return copyRaw("app.aea69e9d7676");},get "about"(){return copyRaw("app.4efca0d10c5f");},get "share-tips"(){return backend.tipsSettings().title;},get "admin"(){return copyRaw(backend.assistantReady()?"team.desk":"app.66d1605446f4");},get "signup"(){return copyRaw("app.47de23586e49");},get "login"(){return copyRaw("app.2ded4a3ee653");},get "forgot"(){return copyRaw("app.93982d33c506");},get "reset"(){return copyRaw("app.4e70f1fd24ba");}};
+let route='dashboard',filter='',subject='All subjects',flashIndex=0,flashBack=false,quiz=null,quizTimer=null,focusTimer=null,focusSeconds=1500,focusRemaining=1500,focusRunning=false,focusEnd=0,focusSubject='Legal Methods',materialKind='all';
 let toastTimer,accessChecked=false,accessFlight=null,accountEpoch=0;
-const lastQuizOrders=new Map();
+const lastQuizOrders=new Map(),library=createSharedLibrary(backend);
+const accountFormIds={login:'login-form',signup:'signup-form',forgot:'forgot-form',reset:'reset-form'};
+let authBusy=false,adminUI=null,adminFlight=null,closeReader=()=>{};
+let libraryRevision=0,overridesReady=false,overridesWork=null,subjectsWork=null,aboutWork=null;
 const publicRoutes=new Set(['login','signup','forgot','reset','about','support']);
 let sidebarCollapsed=localStorage.getItem('lexamah:sidebar-collapsed')==='true';
 function toast(message){$('#toast').textContent=message;$('#toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),4000);}
 function modal(title,body){$('#dialog-content').innerHTML=`<h2>${e(title)}</h2>${body}`;$('#dialog').showModal();}
-function list(type){return applyLibraryOverrides(type,[...builtinResources(type),...(store.get()[type]||[]).map(x=>({...x,library_source:'personal'})),...(remote[type]||[])]).filter((x,i,a)=>a.findIndex(y=>y.id===x.id)===i);}
+function list(type){
+ const saved=(store.get()[type]||[]).map(x=>({...x,library_source:'personal'}));
+ const shared=library.rows(type);
+ const items=overridesReady?[...builtinResources(type),...saved,...shared]:[...saved,...shared.filter(x=>x.lexamah_cloud)];
+ const seen=new Set();
+ return applyLibraryOverrides(type,items).filter(x=>{if(seen.has(x.id))return false;seen.add(x.id);return true;});
+}
 function button(text,to,cls=''){return `<button class="btn ${cls}" data-route="${to}">${text} ${icon('arrow')}</button>`;}
 function heading(title,description,action=''){return `<div class="heading"><div><span class="eyebrow">${copyHTML("app.6bafe4bf2ff1")}</span><h1>${title}</h1><p>${description}</p></div>${action}</div>`;}
 function empty(title,text,action=''){return `<div class="empty"><div class="empty-icon">§</div><h3>${title}</h3><p>${text}</p>${action}</div>`;}
@@ -38,9 +46,19 @@ function today(){return new Date().toLocaleDateString('en-CA');}
 function minutes(){return store.get().sessions.reduce((s,x)=>s+x.minutes,0);}
 function score(){const a=store.get().attempts;return a.length?Math.round(a.reduce((s,x)=>s+x.score/x.total_questions*100,0)/a.length):0;}
 function stats(){const s=store.get();return `<div class="stats">${[[s.completed.length,copyRaw("app.dfdf6a2a7777"),copyRaw("app.3a55c190249b"),'materials'],[s.attempts.length,copyRaw("app.b5091ec027e9"),s.attempts.length?`${score()}% average score`:copyRaw("app.ada33714cb99"),'quiz'],[minutes(),copyRaw("app.36e40f0394ea"),copyRaw("app.8f244c99cbe3"),'study'],[s.bookmarks.length,copyRaw("app.5d702bc5a04d"),copyRaw("app.7c542559b5f0"),'bookmark']].map(([n,t,sub,i])=>`<div class="stat"><span class="stat-icon">${icon(i)}</span><div><small>${t}</small><strong>${n}</strong><span class="sub">${sub}</span></div></div>`).join('')}</div>`;}
-function dashboard(){const s=store.get();const tasks=s.tasks;return heading(`${copyRaw("app.794dd849406a")}${e(s.profile.name.split(' ')[0])}.`,copyRaw("app.f8c70a6d6247"),`<span class="date">${icon('calendar')}${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</span>`)+`<section class="hero"><div><span class="eyebrow">${copyHTML("app.d80606ad1927")}</span><h2>${copyHTML("app.f49cc4cd9bf8")}<br>${copyHTML("app.a439a11f69a2")}</h2><p>${copyHTML("app.e746623544a1")}</p>${button(copyRaw("app.bbc4fcc42c68"),'study')}</div><div class="hero-art" aria-hidden="true"><span>§</span></div></section>${stats()}<div class="dashboard-grid"><div><section class="card"><div class="card-head"><div><h2>${copyHTML("app.d4d436143f9f")}</h2><p>${copyHTML("app.d65f9616ea0f")}</p></div><button class="text-button" data-route="materials">${copyHTML("app.11d193016475")}</button></div>${list('materials').slice(0,3).map((m,i)=>`<div class="row"><span class="row-icon">${['▤','▥','▧'][i]}</span><div class="row-copy"><strong>${e(m.title)}</strong><small>${e(m.subject)} <span class="dot">·</span> ${e(m.type||'Resource')}</small></div><button class="btn" data-open-material="${e(m.id)}">${s.completed.includes(m.id)?copyRaw("app.81033ad744f4"):copyRaw("app.9b9a8d05a7ec")} ↗</button></div>`).join('')}</section><section class="card" style="margin-top:22px"><div class="card-head"><h2>${copyHTML("app.3716eb9d9050")}</h2><button class="text-button" data-route="lectures">${copyHTML("app.93446272bee5")}</button></div>${recordings().length?recordingRows(recordings().slice(0,3)):`<p class="muted">${copyHTML("app.0c0430233748")}</p>`}</section><div class="section-title"><h2>${copyHTML("app.f9e086c14f01")}</h2><span class="muted">${copyHTML("app.61118b1d8aa7")}</span></div><div class="quick-grid">${[['quiz',copyRaw("app.2a2499f1f86d"),copyRaw("app.aeb79837c0bd")],['cases',copyRaw("app.e66b5210259e"),copyRaw("app.0beb0ae81443")],['flashcards',copyRaw("app.57490bdb4451"),copyRaw("app.4eab97d83dd8")]].map(([r,t,d])=>`<button class="quick" data-route="${r}">${icon(r)}<strong>${t}</strong><small>${d}</small></button>`).join('')}</div></div><div><section class="card"><div class="card-head"><h2>${copyHTML("app.5d93e45505fb")}</h2><span class="pill">${tasks.filter(t=>t.done).length}/${tasks.length}</span></div><p class="muted">${copyHTML("app.01873311a672")}</p><div>${tasks.length?tasks.map(t=>`<label class="task ${t.done?'completed':''}"><input type="checkbox" data-task="${e(t.id)}" ${t.done?'checked':''}><span>${e(t.text)}</span><button class="remove-task" data-remove-task="${e(t.id)}" aria-label="${copyHTML("app.9ada6a712243")}">×</button></label>`).join(''):`<p class="muted">${copyHTML("app.0670599ad20e")}</p>`}</div><form id="task-form" class="task-add"><input name="task" required maxlength="160" placeholder="${copyHTML("app.eb35e44559c2")}" aria-label="${copyHTML("app.070ff669b4cf")}"><button class="btn soft" aria-label="${copyHTML("app.ba423a46403c")}">+</button></form></section><section class="focus-mini"><span class="eyebrow">${copyHTML("app.4584a717525b")}</span><h3>${copyHTML("app.932e868a45a6")}</h3><p>${copyHTML("app.4848d3a538c0")}</p>${button(copyRaw("app.49e43084e793"),'study','primary')}</section></div></div>`;}
+function loadOptionalFonts(){
+ if(!document.head||typeof requestAnimationFrame!=='function')return;
+ requestAnimationFrame(()=>{
+  const fonts=document.createElement('link');
+  fonts.rel='stylesheet';fonts.media='print';
+  fonts.href='https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap';
+  fonts.onload=()=>{fonts.media='all';};
+  document.head.append(fonts);
+ });
+}
+function dashboard(){const s=store.get();const tasks=s.tasks,materials=list('materials').slice(0,3),audio=recordings().slice(0,3),pending=library.status('dashboard')==='loading';return heading(`${copyRaw("app.794dd849406a")}${e(s.profile.name.split(' ')[0])}.`,copyRaw("app.f8c70a6d6247"),`<span class="date">${icon('calendar')}${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</span>`)+`<section class="hero"><div><span class="eyebrow">${copyHTML("app.d80606ad1927")}</span><h2>${copyHTML("app.f49cc4cd9bf8")}<br>${copyHTML("app.a439a11f69a2")}</h2><p>${copyHTML("app.e746623544a1")}</p>${button(copyRaw("app.bbc4fcc42c68"),'study')}</div><div class="hero-art" aria-hidden="true"><span>§</span></div></section>${stats()}<div class="dashboard-grid"><div><section class="card"><div class="card-head"><div><h2>${copyHTML("app.d4d436143f9f")}</h2><p>${copyHTML("app.d65f9616ea0f")}</p></div><button class="text-button" data-route="materials">${copyHTML("app.11d193016475")}</button></div>${materials.length?materials.map((m,i)=>`<div class="row"><span class="row-icon">${['▤','▥','▧'][i]}</span><div class="row-copy"><strong>${e(m.title)}</strong><small>${e(m.subject)} <span class="dot">·</span> ${e(m.type||'Resource')}</small></div><button class="btn" data-open-material="${e(m.id)}">${s.completed.includes(m.id)?copyRaw("app.81033ad744f4"):copyRaw("app.9b9a8d05a7ec")} ↗</button></div>`).join(''):`<p class="muted">${copyHTML(pending||!overridesReady?'performance.loadingMaterials':'performance.emptyMaterials')}</p>`}</section><section class="card" style="margin-top:22px"><div class="card-head"><h2>${copyHTML("app.3716eb9d9050")}</h2><button class="text-button" data-route="lectures">${copyHTML("app.93446272bee5")}</button></div>${audio.length?recordingRows(audio):`<p class="muted">${copyHTML(pending?'performance.loadingRecordings':'app.0c0430233748')}</p>`}</section><div class="section-title"><h2>${copyHTML("app.f9e086c14f01")}</h2><span class="muted">${copyHTML("app.61118b1d8aa7")}</span></div><div class="quick-grid">${[['quiz',copyRaw("app.2a2499f1f86d"),copyRaw("app.aeb79837c0bd")],['cases',copyRaw("app.e66b5210259e"),copyRaw("app.0beb0ae81443")],['flashcards',copyRaw("app.57490bdb4451"),copyRaw("app.4eab97d83dd8")]].map(([r,t,d])=>`<button class="quick" data-route="${r}">${icon(r)}<strong>${t}</strong><small>${d}</small></button>`).join('')}</div></div><div><section class="card"><div class="card-head"><h2>${copyHTML("app.5d93e45505fb")}</h2><span class="pill">${tasks.filter(t=>t.done).length}/${tasks.length}</span></div><p class="muted">${copyHTML("app.01873311a672")}</p><div>${tasks.length?tasks.map(t=>`<label class="task ${t.done?'completed':''}"><input type="checkbox" data-task="${e(t.id)}" ${t.done?'checked':''}><span>${e(t.text)}</span><button class="remove-task" data-remove-task="${e(t.id)}" aria-label="${copyHTML("app.9ada6a712243")}">×</button></label>`).join(''):`<p class="muted">${copyHTML("app.0670599ad20e")}</p>`}</div><form id="task-form" class="task-add"><input name="task" required maxlength="160" placeholder="${copyHTML("app.eb35e44559c2")}" aria-label="${copyHTML("app.070ff669b4cf")}"><button class="btn soft" aria-label="${copyHTML("app.ba423a46403c")}">+</button></form></section><section class="focus-mini"><span class="eyebrow">${copyHTML("app.4584a717525b")}</span><h3>${copyHTML("app.932e868a45a6")}</h3><p>${copyHTML("app.4848d3a538c0")}</p>${button(copyRaw("app.49e43084e793"),'study','primary')}</section></div></div>`;}
 function readingItems(){return [...list('materials').map(x=>({...x,resource_type:'materials'})),...list('lectureNotes').map(x=>({...x,resource_type:'lectureNotes'}))];}
-function recordings(){return (remote.lectures||[]).filter(isAudioRecording);}
+function recordings(){return library.rows('lectures').filter(isAudioRecording);}
 function materials(){return heading(copyRaw("app.fda5ba71a49b"),copyRaw("app.6487e81ae907"))+`<div class="admin-tabs">${[['all',copyRaw("app.dd036462e6ce")],['materials',copyRaw("app.fd10a146e962")],['lectureNotes',copyRaw("app.cf0659e6a0e1")]].map(([kind,label])=>`<button class="btn ${materialKind===kind?'primary':''}" data-reading-kind="${kind}">${label}</button>`).join('')}</div>`+toolbar('materials and lecture notes')+`<div class="grid" id="results">${materialCards()}</div>`;}
 
 function materialCards(){const state=store.get(),items=filtered(readingItems()).filter(x=>materialKind==='all'||x.resource_type===materialKind);return items.length?items.map(m=>`<article class="card resource"><div class="resource-top"><span class="tag">${e(m.subject||'General')}</span><button class="icon-button" data-bookmark="${e(m.id)}" aria-label="${state.bookmarks.includes(m.id)?copyRaw("app.51883bd8df17"):copyRaw("app.1509f561f241")} ${e(m.title)}">${state.bookmarks.includes(m.id)?'◆':'◇'}</button></div><h3>${e(m.title)}</h3><p>${e(m.description||'Course resource')}</p><span class="muted">${m.resource_type==='lectureNotes'?copyRaw("app.8e8dd2dc8d4d"):copyRaw("app.616cb218a65b")}</span><div class="actions"><button class="btn primary" data-open-resource="${m.resource_type}:${e(m.id)}">${copyHTML("app.3ece59baa50c")}</button><button class="btn" data-download-resource="${m.resource_type}:${e(m.id)}">${copyHTML("app.fcc51ef8e95b")}</button>${state.completed.includes(m.id)?`<span class="tag">${copyHTML("app.8df25e6373a6")}</span>`:''}</div></article>`).join(''):empty(copyRaw("app.fee1b1255e1d"),copyRaw("app.7958b2e60420"));}
@@ -82,20 +100,171 @@ function signup(){return heading(copyRaw("app.92a15bd50337"),`${copyRaw("app.b9d
 function login(){return heading(copyRaw("app.dfdbca16342f"),copyRaw("app.8ce75e868d75"))+`<section class="card auth-card"><h2>${copyHTML("app.c189840cf7e2")}</h2><form id="login-form"><label for="login-username">${copyHTML("app.e3b89e9d33f8")}</label><input id="login-username" name="username" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_.]{3,30}" autocomplete="username" placeholder="${e(signupExample('username'))}"><label for="login-password">${copyHTML("app.e7cf3ef4f17c")}</label><div class="password-field"><input id="login-password" name="password" type="password" required maxlength="200" autocomplete="current-password" placeholder="${copyHTML("app.c06bf9670174")}"><button type="button" class="btn password-toggle" data-password-toggle="login-password" data-password-label="password" aria-controls="login-password" aria-label="${copyHTML("app.6aeaa6a53d09")}" aria-pressed="false">${copyHTML("app.0df6f1cad36c")}</button></div><p id="login-status" class="muted" role="status"></p><div class="actions"><button class="btn primary">${copyHTML("app.cb15ac176f59")}</button><button class="btn" type="button" data-route="signup">${copyHTML("app.798ca2ce18bf")}</button><button class="text-button" type="button" data-route="forgot">${copyHTML("app.30c1d8d3e912")}</button></div></form></section>`;}
 function settings(){const state=store.get(),config=backend.config();return heading(copyRaw("app.b166bae2c32c"),copyRaw("app.57e2b71a9abc"))+`<div class="two-col"><section class="card"><div class="card-head"><h2>${copyHTML("app.528d89ad72cb")}</h2></div><form id="profile-form"><label for="profile-name">${copyHTML("app.f13a64ba2fea")}</label><input id="profile-name" name="name" value="${e(state.profile.name)}" required maxlength="70"><label for="profile-phone">${copyHTML("app.72dba9aeed89")}</label><input id="profile-phone" name="phone_number" type="tel" maxlength="25" pattern="[+0-9 ()-]{7,25}" autocomplete="tel" value="${e(state.profile.phone_number||'')}"><label for="profile-institution">${copyHTML("app.65a1553729e3")}</label><input id="profile-institution" name="institution" value="${e(state.profile.institution||'')}" maxlength="160" ${backend.user()?'required':''}><label for="profile-level">${copyHTML("app.1709305c9fa9")}</label><input id="profile-level" name="level" value="${e(state.profile.level)}" maxlength="40" ${backend.user()?'required':''}>${backend.user()?`<p class="muted">${copyHTML("app.3806d61c3406")} ${e(state.profile.username||'Not assigned')}<br>${copyHTML("app.17507dcf8457")} ${e(backend.user().email)}</p>`:''}<div class="actions"><button class="btn primary">${copyHTML("app.0c8209e72ec8")}</button><button type="button" class="btn" id="settings-theme">${copyHTML("app.32e5f2375d85")}</button></div></form></section><section class="card"><div class="card-head"><h2>${copyHTML("app.dbb5f6371b6a")}</h2></div>${backend.user()?`<p class="muted">${copyHTML("app.d74622e9c394")} ${e(state.profile.username||state.profile.name)}</p><button class="btn" id="sign-out">${copyHTML("app.49616145514e")}</button>`:`<p class="muted">${copyHTML("app.5936a2187813")}</p><div class="actions">${button(copyRaw("app.c189840cf7e2"),'login','primary')}${button(copyRaw("app.5e2b8e96503d"),'signup')}</div>`}</section><section class="card"><div class="card-head"><h2>${copyHTML("app.a3f566343d02")}</h2><span class="pill">${copyHTML("app.101f4d95374a")}</span></div><p class="muted">${copyHTML("app.49e8f2cf45ae")}</p><div class="actions"><button class="btn primary" id="export-data">${copyHTML("app.d6dfd0f08280")}</button><label class="btn" style="margin:0" for="import-data">${copyHTML("app.a4c8f47c4d57")}</label><input type="file" accept="application/json,.json" id="import-data" class="hidden"></div><div class="actions">${button(copyRaw("app.c8ebd469e850"),'studio')}</div></section>${backend.adminReady()?`<section class="card"><div class="card-head"><h2>${copyHTML("app.556c90d4f957")}</h2><span class="pill">${backend.configured()?copyRaw("app.84aebc69a1bf"):copyRaw("app.7aec484a1255")}</span></div><p class="muted">${copyHTML("app.64e25ebeb2db")}</p><form id="config-form"><label for="supabase-url">${copyHTML("app.03fb44a5243d")}</label><input id="supabase-url" name="url" type="url" required value="${e(config.url)}"><label for="supabase-key">${copyHTML("app.b80bb20a9a1c")}</label><input id="supabase-key" name="key" type="password" autocomplete="off" required value="${e(config.key)}"><div class="actions"><button class="btn primary">${copyHTML("app.629b07374e76")}</button></div></form></section>`:""}</div>`;}
 function studio(){return heading(copyRaw("app.761af879b739"),copyRaw("app.ccc2e53689ef"))+`<div class="notice">${copyHTML("app.e2d4bd824c74")}</div><div class="quick-grid">${[['materials',copyRaw("app.23fcd6b909c6"),copyRaw("app.380df31f2d8d")],['lectureNotes',copyRaw("app.cf0659e6a0e1"),copyRaw("app.545eb4ce2fc1")],['cases',copyRaw("app.9ab92306f737"),copyRaw("app.5acb39268faf")],['flashcards',copyRaw("app.eac4b70868b6"),copyRaw("app.95f1b1e519e7")],['quizSets',copyRaw("app.dd0acd7417ae"),copyRaw("app.f4b210750900")],['quizQuestions',copyRaw("app.f5f777044b10"),copyRaw("app.0c8aa5349bf2")]].map(([type,title,desc])=>`<button class="quick" data-create="${type}">${icon(type==='quizSets'||type==='quizQuestions'?'quiz':type)}<strong>${title}</strong><small>+ ${desc}</small></button>`).join('')}</div><section class="card" style="margin-top:24px"><div class="card-head"><h2>${copyHTML("app.b2b7848b6281")}</h2><span class="pill">${copyHTML("app.1ce52edb177b")}</span></div>${['materials','lectureNotes','cases','flashcards','quizSets','quizQuestions'].flatMap(type=>(store.get()[type]||[]).map(x=>`<div class="row"><div class="row-copy"><strong>${e(x.title||x.name||x.front||x.question)}</strong><small>${e(type)} · ${e(x.subject||'Practice')}</small></div><button class="btn" data-edit="${type}:${e(x.id)}">${copyHTML("app.464c4ffd019e")}</button><button class="btn danger" data-delete="${type}:${e(x.id)}">${copyHTML("app.e2d0a54968ea")}</button></div>`)).join('')||`<p class="muted">${copyHTML("app.3d97afdcc6d0")}</p>`}</section>`;}
-function render(){const expected=backend.recoveryReady()?null:backend.user()?.id||null;if(store.owner()!==expected)resetWorkspace(expected);if(!publicRoutes.has(route)&&(!backend.user()||backend.recoveryReady()))route='login';if(route==='admin'&&!backend.adminReady())route='dashboard';document.title=`${routes[route]} · ${brandName()}`;$('#crumb').textContent=route==='about'?`About ${brandName()}`:routes[route];$('#nav').innerHTML=Object.entries(routes).filter(([k])=>!['settings','studio','signup','login','forgot','reset'].includes(k)&&(k!=='admin'||backend.adminReady())&&(backend.user()||publicRoutes.has(k))).map(([k,v])=>`<button class="nav-link ${route===k?'active':''}" data-route="${k}" ${route===k?'aria-current="page"':''}>${icon(k)}${k==='about'?`About ${brandHTML()}`:e(v)}</button>`).join('');$('#content').innerHTML=(!accessChecked&&backend.user()&&!publicRoutes.has(route))?`<section class="card auth-card"><h2>${copyHTML("app.caea68eeb986")}</h2></section>`:({dashboard,materials,lectures,cases,quiz:quizPage,study,flashcards:cards,progress,settings,studio,signup,login,support:supportPage,about:aboutPage,forgot:forgotPage,reset:resetPage,admin:renderAdmin}[route])();document.body.classList.toggle('dark',store.get().theme==='dark');$('#user-label').innerHTML=`${e(store.get().profile.name)}<small>${e(store.get().profile.level)}</small>`;document.querySelectorAll('.avatar').forEach(x=>x.textContent=store.get().profile.name.slice(0,1).toUpperCase());$('#connection').textContent=backend.user()?copyRaw("app.a3892a2be834"):`Welcome to ${brandName()}`;document.querySelectorAll('[data-route="settings"]').forEach(el=>{el.hidden=!backend.user();});updateSidebar();bindForms();bindRecovery({toast});if(route==='admin')bindAdmin();syncAudioButtons();$('#account-links').innerHTML=backend.user()?'':`<button class="text-button" data-route="login">${copyHTML("app.c189840cf7e2")}</button><button class="btn soft" data-route="signup">${copyHTML("app.5e2b8e96503d")}</button>`;applyBranding();applyStaticCopy();}
-function navigate(){const next=location.hash.slice(1);route=Object.hasOwn(routes,next)?next:'dashboard';filter='';subject='All subjects';materialKind='all';$('#sidebar').classList.remove('open');$('#menu').setAttribute('aria-expanded','false');render();window.scrollTo(0,0);if(route==='admin'&&backend.adminReady())loadAdmin();}
+function render({keepMain=false}={}){
+ const id=backend.recoveryReady()?null:backend.user()?.id||null,previous=route;
+ if(store.owner()!==id){resetWorkspace(id);keepMain=false;}
+ if(!publicRoutes.has(route)&&!id)route='login';
+ if(accessChecked&&route==='admin'&&!backend.staffReady())route='dashboard';
+ if(accessChecked&&route==='share-tips'&&!backend.tipsSettings().enabled)route='dashboard';
+ if(route!==previous)keepMain=false;
+ document.title=`${routes[route]} · ${brandName()}`;
+ $('#crumb').textContent=route==='about'?`About ${brandName()}`:routes[route];
+ $('#nav').innerHTML=Object.entries(routes)
+  .filter(([key])=>!['settings','studio','signup','login','forgot','reset'].includes(key)
+   &&(key!=='admin'||(accessChecked&&backend.staffReady()))
+   &&(key!=='share-tips'||(accessChecked&&backend.tipsSettings().enabled))
+   &&((accessChecked&&id)||publicRoutes.has(key)))
+  .map(([key,label])=>`<button class="nav-link ${route===key?'active':''}" data-route="${key}" ${route===key?'aria-current="page"':''}>${icon(key)}${key==='about'?`About ${brandHTML()}`:e(label)}</button>`).join('');
+ if(!keepMain){
+  const content=$('#content');
+  const pages={dashboard,materials,lectures,cases,quiz:quizPage,study,flashcards:cards,progress,settings,studio,signup,login,support:supportPage,about:aboutPage,forgot:forgotPage,reset:resetPage,"share-tips":tipsPage,admin:()=>adminUI?.renderAdmin()||loading('performance.loadingAdmin')};
+  if(!accessChecked&&id&&!publicRoutes.has(route)){
+   content.innerHTML=loading('app.caea68eeb986');
+  }else{
+   content.innerHTML=pages[route]();
+   if(accessChecked&&library.canLoad(route)){
+    const status=library.status(route);
+    if(status!=='ready'||!overridesReady)content.innerHTML+=status==='error'
+     ?`<p class="notice" role="status">${copyHTML('performance.libraryError')} <button class="btn" id="retry-resources">${copyHTML('performance.retry')}</button></p>`
+     :`<p class="muted resource-loading" role="status">${copyHTML('performance.loadingResources')}</p>`;
+   }
+  }
+  bindForms();bindRecovery({toast});
+  if(route==='admin'&&accessChecked)adminUI?.bindAdmin();
+  if(route==='share-tips'&&accessChecked)bindTips({render,toast,modal});
+ }
+ document.body.classList.toggle('dark',store.get().theme==='dark');
+ $('#user-label').innerHTML=`${e(store.get().profile.name)}<small>${e(store.get().profile.level)}</small>`;
+ document.querySelectorAll('.avatar').forEach(node=>node.textContent=store.get().profile.name.slice(0,1).toUpperCase());
+ $('#connection').textContent=id&&accessChecked?copyRaw("app.a3892a2be834"):`Welcome to ${brandName()}`;
+ document.querySelectorAll('[data-route="settings"]').forEach(el=>{el.hidden=!id||!accessChecked;});
+ $('#account-links').innerHTML=id&&accessChecked?'':`<button class="text-button" data-route="login">${copyHTML("app.c189840cf7e2")}</button><button class="btn soft" data-route="signup">${copyHTML("app.5e2b8e96503d")}</button>`;
+ updateSidebar();syncAudioButtons();applyBranding();applyStaticCopy();
+}
+function loading(key){return `<section class="card auth-card" role="status"><h2>${copyHTML(key)}</h2></section>`;}
+function renderBackground(){
+ const focus=document.activeElement,form=accountFormIds[route]?$('#'+accountFormIds[route]):null;
+ const formInUse=form&&(authBusy||form.contains?.(focus)||Array.from(form.querySelectorAll?.('input')||[]).some(input=>input.value));
+ const otherEdit=$('#content').contains?.(focus)&&focus?.matches?.('input, select, textarea, [contenteditable]');
+ const searchable=['search','subject'].includes(focus?.id);
+ const keepMain=Boolean(formInUse||route==='admin'||route==='share-tips'||(otherEdit&&!searchable));
+ const restore=!keepMain&&searchable?{selector:'#'+focus.id,start:focus.selectionStart,end:focus.selectionEnd}:null;
+ render({keepMain});
+ if(restore){const field=$(restore.selector);field?.focus();if(restore.start!==null)field?.setSelectionRange?.(restore.start,restore.end);}
+}
+function navigate(){
+ const next=location.hash.slice(1);
+ route=Object.hasOwn(routes,next)?next:'dashboard';filter='';subject='All subjects';materialKind='all';
+ $('#sidebar').classList.remove('open');$('#menu').setAttribute('aria-expanded','false');
+ render();window.scrollTo(0,0);
+ void loadRouteData(route);
+ if(route==='admin'&&accessChecked&&backend.staffReady())void loadAdminRoute();
+}
+async function loadAdminRoute(){
+ const owner=backend.user()?.id,epoch=accountEpoch;
+ try{
+  adminFlight??=import('./admin.js').then(module=>{
+   module.initAdmin({render,toast,modal,reload:loadRemote});
+   adminUI=module;return module;
+  }).catch(error=>{adminFlight=null;throw error;});
+  const module=await adminFlight;
+  if(route==='admin'&&epoch===accountEpoch&&owner===backend.user()?.id&&backend.staffReady())await module.loadAdmin();
+ }catch(error){
+  if(route==='admin'&&epoch===accountEpoch)toast(error.message||copyRaw('performance.libraryError'));
+ }
+}
 function safeURL(raw){try{const u=new URL(raw);return ['http:','https:'].includes(u.protocol)?u.href:null;}catch{return null;}}
 function resourceById(type,id){return list(type).find(x=>x.id===id);}
-async function openResource(type,id){if(!backend.user())throw new Error(copyRaw("app.f475128481e3"));if(['materials','lectureNotes'].includes(type)){const item=resourceById(type,id);if(item)await showDocument(item,type,{modal,onRead(){if(!store.get().completed.includes(id)){store.update({completed:[...store.get().completed,id]});render();}}});return;}const item=resourceById(type,id);if(!item)return;const notes=store.get().notes[id]||'';modal(item.title||item.name,`<span class="tag">${e(item.subject||'General')}</span>${item.citation?`<p class="muted">${e(item.citation)}</p>`:''}<div class="reader" style="margin-top:20px">${e(item.body||item.content||item.summary||item.description||'Select Download to get the attached resource.')}</div><label for="resource-notes">${copyHTML("app.f7b264e95a2a")}</label><textarea id="resource-notes">${e(notes)}</textarea><div class="actions"><button class="btn primary" id="save-notes">${copyHTML("app.7c756b59a2d3")}</button><button class="btn" id="complete-material">${store.get().completed.includes(id)?copyRaw("app.54b4e3f28dc5"):copyRaw("app.2b53d89797de")}</button><button class="btn" id="download-material">${copyHTML("app.d6eafe823591")} ${type==='lectureNotes'?'lecture note':'material'} ↓</button></div>`);$('#save-notes').onclick=()=>{store.update({notes:{...store.get().notes,[id]:$('#resource-notes').value}});toast(copyRaw("app.04965e23cd9e"));};$('#complete-material').onclick=()=>{store.toggle('completed',id);$('#dialog').close();render();toast(copyRaw("app.49e50c882a4b"));};$('#download-material').onclick=()=>{const text=$('#resource-notes').value;$('#dialog').close();requestDownload({...item,resource_type:type},{personalNotes:text});};}
+async function openResource(type,id){if(!backend.user())throw new Error(copyRaw("app.f475128481e3"));if(['materials','lectureNotes'].includes(type)){const item=resourceById(type,id);if(item){
+ const epoch=accountEpoch,openedFrom=route;
+ const reader=await import('./document-reader.js');
+ if(epoch!==accountEpoch||route!==openedFrom||!accessChecked)return;
+ closeReader=reader.closeReader;
+ await reader.showDocument(item,type,{onRead(){if(!store.get().completed.includes(id)){store.update({completed:[...store.get().completed,id]});render();}}});}return;}const item=resourceById(type,id);if(!item)return;const notes=store.get().notes[id]||'';modal(item.title||item.name,`<span class="tag">${e(item.subject||'General')}</span>${item.citation?`<p class="muted">${e(item.citation)}</p>`:''}<div class="reader" style="margin-top:20px">${e(item.body||item.content||item.summary||item.description||'Select Download to get the attached resource.')}</div><label for="resource-notes">${copyHTML("app.f7b264e95a2a")}</label><textarea id="resource-notes">${e(notes)}</textarea><div class="actions"><button class="btn primary" id="save-notes">${copyHTML("app.7c756b59a2d3")}</button><button class="btn" id="complete-material">${store.get().completed.includes(id)?copyRaw("app.54b4e3f28dc5"):copyRaw("app.2b53d89797de")}</button><button class="btn" id="download-material">${copyHTML("app.d6eafe823591")} ${type==='lectureNotes'?'lecture note':'material'} ↓</button></div>`);$('#save-notes').onclick=()=>{store.update({notes:{...store.get().notes,[id]:$('#resource-notes').value}});toast(copyRaw("app.04965e23cd9e"));};$('#complete-material').onclick=()=>{store.toggle('completed',id);$('#dialog').close();render();toast(copyRaw("app.49e50c882a4b"));};$('#download-material').onclick=()=>{const text=$('#resource-notes').value;$('#dialog').close();requestDownload({...item,resource_type:type},{personalNotes:text});};}
 function createForm(type,id){if(!backend.user())throw new Error(copyRaw("app.771a9aa3e820"));if(type!=='quizQuestions'&&!subjectCatalog.names().length&&!id){toast(copyRaw("app.a71813326fdc"));return;}if(type==='lectures'){toast(copyRaw("app.72efb6fc6e16"));return;}const x=id?store.get()[type].find(x=>x.id===id):{};const field=(name,label,value='',tag='input',extra='')=>`<label for="field-${name}">${label}</label><${tag} id="field-${name}" name="${name}" ${tag==='input'?`value="${e(value)}"`:''} ${extra}>${tag==='textarea'?e(value):''}${tag==='textarea'?'</textarea>':''}`;let body='';if(type==='flashcards')body=field('front',copyRaw("app.289aff12b042"),x.front,'textarea','required')+field('back',copyRaw("app.b2a3aa602762"),x.back,'textarea','required');else if(type==='quizQuestions')body=`<label for="quiz-set">${copyHTML("app.e1bf4b3f3d18")}</label><select name="quiz_set_id" id="quiz-set" required>${store.get().quizSets.map(q=>`<option value="${e(q.id)}" ${x.quiz_set_id===q.id?'selected':''}>${e(q.name)}</option>`).join('')}</select>`+field('question',copyRaw("app.289aff12b042"),x.question,'textarea','required')+[0,1,2,3].map(i=>field(`option${i}`,`Option ${'ABCD'[i]}`,x.options?.[i]||'','input','required')).join('')+`<label for="correct-index">${copyHTML("app.fb019d338b43")}</label><select id="correct-index" name="correct_index">${[0,1,2,3].map(i=>`<option value="${i}" ${Number(x.correct_index)===i?'selected':''}>${'ABCD'[i]}</option>`).join('')}</select>`+field('explanation',copyRaw("app.16ee4625bce9"),x.explanation,'textarea','required');else body=field(type==='quizSets'?'name':'title',copyRaw("app.7e8cd2056da7"),x.title||x.name,'input','required maxlength="180"')+field('description',copyRaw("app.526e0087cc3f"),x.description,'textarea');if(type!=='quizQuestions')body+=`<label for="field-subject">${copyHTML("app.68971283841a")}</label><select id="field-subject" name="subject">${subjectCatalog.options(x.subject).map(s=>`<option ${x.subject===s?'selected':''}>${e(s)}</option>`).join('')}</select>`;if(type==='materials'||type==='lectureNotes'||type==='cases')body+=field('body',type==='cases'?copyRaw("app.f9f39e83931e"):copyRaw("app.5c80d1708bf1"),x.body,'textarea');if(['materials','lectureNotes','cases'].includes(type))body+=field('url',copyRaw("app.b5bc89c64e3f"),x.url,'input','type="url"');if(type==='cases')body+=field('citation',copyRaw("app.a2a15fd54244"),x.citation);if(type==='quizSets')body+=field('time_minutes',copyRaw("app.e841e6866c2c"),x.time_minutes||10,'input','type="number" min="1" max="180" required');if(type==='quizQuestions'&&!store.get().quizSets.length){toast(copyRaw("app.ffa2f28fc5c2"));return;}modal(`${id?copyRaw("app.464c4ffd019e"):copyRaw("app.4759498ac2a7")} ${type.replace(/([A-Z])/g,' $1').toLowerCase()}`,`<form id="create-form">${body}<div class="actions"><button class="btn primary">${copyHTML("app.294cf5da8718")}</button><button type="button" class="btn" id="cancel-create">${copyHTML("app.19766ed6ccb2")}</button></div></form>`);$('#cancel-create').onclick=()=>$('#dialog').close();$('#create-form').onsubmit=ev=>{ev.preventDefault();const values=Object.fromEntries(new FormData(ev.target));if(values.url&&!safeURL(values.url)){toast(copyRaw("app.5b170b27a40c"));return;}const item={...x,...values,id:id||`local-${crypto.randomUUID()}`};if(type==='quizQuestions'){item.options=[0,1,2,3].map(i=>values[`option${i}`]);item.correct_index=Number(values.correct_index);[0,1,2,3].forEach(i=>delete item[`option${i}`]);}if(type==='quizSets')item.time_minutes=Number(values.time_minutes);const items=store.get()[type];store.update({[type]:id?items.map(y=>y.id===id?item:y):[...items,item]});$('#dialog').close();render();toast(copyRaw("app.d9ed30f85965"));};}
 function toggleTheme(){store.update({theme:store.get().theme==='dark'?'light':'dark'});render();}
-async function loadRemote(){if(!backend.configured()||!backend.user()||!accessChecked)return;const owner=backend.user().id,epoch=accountEpoch;await backend.refreshSession();await loadLibraryOverrides();await subjectCatalog.load();await loadAbout();if(subject!=='All subjects'&&!subjectCatalog.names().includes(subject))subject='All subjects';if(!focusRunning&&!subjectCatalog.names().includes(focusSubject))focusSubject=subjectCatalog.names()[0]||'';const types={lectureNotes:null,get "materials"(){return copyRaw("app.afba1a0ce1c8");},get "lectures"(){return copyRaw("app.faa93e00a92e");},get "cases"(){return copyRaw("app.352b84777d8d");},flashcards:null,get "quizSets"(){return copyRaw("app.33d65b8927c9");},get "quizQuestions"(){return copyRaw("app.6a8e1bf7e6bb");}};const results=await Promise.allSettled(Object.entries(types).map(async([key,table])=>{const responses=await Promise.allSettled([table?backend.read(table):Promise.resolve([]),backend.cloudRead(key)]);const data=responses.filter(r=>r.status==='fulfilled').flatMap((r,i)=>r.value.map(x=>({...x,lexamah_cloud:r===responses[1],library_source:r===responses[1]?undefined:'legacy'})));if(responses.every(r=>r.status==='rejected'))throw responses[0].reason;if(epoch!==accountEpoch||backend.user()?.id!==owner)return;remote[key]=data.map(x=>({...x,title:x.title||x.name,subject:x.subject||x.course||'General',body:x.body||x.content||x.summary,url:x.url||x.file_url||x.recording_url}));}));if(epoch!==accountEpoch||backend.user()?.id!==owner)return;render();const failures=results.filter(x=>x.status==='rejected');if(failures.length)toast(`${failures.length}${copyRaw("app.4a123b7f3fae")}`);return failures;}
-function bindForms(){if($('#search'))$('#search').oninput=ev=>{filter=ev.target.value;const start=ev.target.selectionStart;render();$('#search').focus();$('#search').setSelectionRange(start,start);};if($('#subject'))$('#subject').onchange=ev=>{subject=ev.target.value;flashIndex=0;flashBack=false;render();};if($('#task-form'))$('#task-form').onsubmit=ev=>{ev.preventDefault();const text=new FormData(ev.target).get('task').trim();if(!text)return;store.update({tasks:[...store.get().tasks,{id:crypto.randomUUID(),text,done:false}]});render();};if($('#profile-form'))$('#profile-form').onsubmit=async event=>{event.preventDefault();try{const values=Object.fromEntries(new FormData(event.target));const profile={...store.get().profile,name:values.name.trim(),phone_number:values.phone_number.trim(),institution:values.institution.trim(),level:values.level.trim()};if(!profile.name)return;await backend.saveProfile(profile);store.update({profile});render();toast(copyRaw("app.3a06720a52cb"));}catch(err){toast(err.message);}};if($('#config-form'))$('#config-form').onsubmit=async ev=>{ev.preventDefault();try{if(!backend.adminReady())throw new Error(copyRaw("app.2d3d0b30bde9"));const f=new FormData(ev.target);backend.configure(f.get('url'),f.get('key'));await loadRemote();toast(copyRaw("app.6054762bce67"));}catch(err){toast(err.message);}};if($('#signup-form'))$('#signup-form').onsubmit=async event=>{event.preventDefault();const submit=event.target.querySelector('button[type="submit"],button:not([type])'),status=$('#signup-status');submit.disabled=true;try{const values=Object.fromEntries(new FormData(event.target));const profile={phone_number:values.phone_number.trim(),full_name:values.full_name.trim(),username:values.username.trim(),institution:values.institution.trim(),level:values.level.trim()};if(Object.values(profile).some(value=>!value))throw new Error(copyRaw("app.9f96a463d98c"));if(!/^\+?[0-9 ()-]{7,25}$/.test(profile.phone_number))throw new Error(copyRaw("app.90eeb8ff8c3a"));status.textContent=copyRaw("app.ae042262a93a");const result=await backend.signUp(values.email.trim(),values.password,profile);if(result.access_token){await activateAccount();trackVisit();await loadRemote();location.hash='dashboard';toast(copyRaw("app.b5e37bd92021"));}else{location.hash='login';toast(copyRaw("app.6f38c8cc1ae6"));}}catch(err){status.textContent=err.message.includes('Database error saving new user')?copyRaw("app.c7c45e369716"):err.message;}finally{submit.disabled=false;}};if($('#login-form'))$('#login-form').onsubmit=async event=>{event.preventDefault();const submit=event.target.querySelector('button[type="submit"],button:not([type])'),status=$('#login-status');submit.disabled=true;try{const values=Object.fromEntries(new FormData(event.target));status.textContent=copyRaw("app.3b14744b9c25");await flushProgress().catch(()=>{});await backend.signIn(values.username.trim(),values.password);await activateAccount();trackVisit();await loadRemote();location.hash='dashboard';toast(copyRaw("app.dfdbca16342f"));}catch(err){status.textContent=err.message;}finally{submit.disabled=false;}};if($('#import-data'))$('#import-data').onchange=async ev=>{try{const file=ev.target.files[0];if(!file)return;if(file.size>5e6)throw new Error(copyRaw("app.c09fb152a983"));store.import(await file.text());render();toast(copyRaw("app.f7da06c62412"));}catch(err){toast(err.message);}};if($('#focus-subject'))$('#focus-subject').onchange=ev=>focusSubject=ev.target.value;if($('#focus-length'))$('#focus-length').onchange=ev=>{focusSeconds=Number(ev.target.value)*60;focusRemaining=focusSeconds;render();};}
+function invalidateLibrary(){
+ libraryRevision++;library.reset();resetLibraryOverrides();
+ overridesReady=false;overridesWork=null;subjectsWork=null;aboutWork=null;
+}
+function loadOverrides(){
+ const stamp=libraryRevision;
+ overridesWork??=loadLibraryOverrides().then(()=>{
+  if(stamp===libraryRevision)overridesReady=true;
+ });
+ return overridesWork;
+}
+function loadSubjects(){
+ const stamp=libraryRevision;
+ subjectsWork??=subjectCatalog.load().then(()=>{
+  if(stamp!==libraryRevision)return;
+  if(subject!=='All subjects'&&!subjectCatalog.names().includes(subject))subject='All subjects';
+  if(!focusRunning&&!subjectCatalog.names().includes(focusSubject))focusSubject=subjectCatalog.names()[0]||'';
+ });
+ return subjectsWork;
+}
+async function loadRouteData(page){
+ const epoch=accountEpoch,stamp=libraryRevision;
+ const repaint=()=>{
+  if(route===page&&epoch===accountEpoch&&stamp===libraryRevision)renderBackground();
+ };
+ if(page==='about'||page==='support'){
+  aboutWork??=loadAbout();
+  await aboutWork;repaint();return;
+ }
+ if(!accessChecked||!backend.user()||!backend.configured())return;
+ const sections=library.canLoad(page),subjects=['materials','lectures','cases','study','flashcards','studio'].includes(page);
+ if(!sections&&!subjects)return;
+ const tasks=[];
+ if(sections)tasks.push(library.load(page),loadOverrides());
+ if(subjects)tasks.push(loadSubjects());
+ await Promise.allSettled(tasks);repaint();
+}
+async function loadRemote(){
+ invalidateLibrary();
+ await loadRouteData(route);
+}
+async function openSignedInWorkspace(message){
+ if(!await activateAccount())return;
+ if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'','#dashboard');
+ else location.hash='dashboard';
+ navigate();startAccountExtras({freshLogin:true});trackVisit();toast(message);
+}
+async function submitLogin(event){
+ event.preventDefault();if(authBusy)return;
+ const form=event.target,submit=form.querySelector('button[type="submit"],button:not([type])'),status=$('#login-status');
+ const values=Object.fromEntries(new FormData(form));authBusy=true;submit.disabled=true;
+ try{
+  status.textContent=copyRaw("app.3b14744b9c25");
+  if(accessChecked&&store.dirty())await flushProgress().catch(()=>{});
+  await backend.signIn(values.username.trim(),values.password);
+  await openSignedInWorkspace(copyRaw("app.dfdbca16342f"));
+ }catch(error){status.textContent=error.message;}
+ finally{authBusy=false;submit.disabled=false;}
+}
+async function submitSignup(event){
+ event.preventDefault();if(authBusy)return;
+ const form=event.target,submit=form.querySelector('button[type="submit"],button:not([type])'),status=$('#signup-status');
+ authBusy=true;submit.disabled=true;
+ try{
+  const values=Object.fromEntries(new FormData(form));
+  const profile={phone_number:values.phone_number.trim(),full_name:values.full_name.trim(),username:values.username.trim(),institution:values.institution.trim(),level:values.level.trim()};
+  if(Object.values(profile).some(value=>!value))throw new Error(copyRaw("app.9f96a463d98c"));
+  if(!/^\+?[0-9 ()-]{7,25}$/.test(profile.phone_number))throw new Error(copyRaw("app.90eeb8ff8c3a"));
+  status.textContent=copyRaw("app.ae042262a93a");
+  const result=await backend.signUp(values.email.trim(),values.password,profile);
+  if(result.access_token)await openSignedInWorkspace(copyRaw("app.b5e37bd92021"));
+  else{location.hash='login';toast(copyRaw("app.6f38c8cc1ae6"));}
+ }catch(error){status.textContent=error.message.includes('Database error saving new user')?copyRaw("app.c7c45e369716"):error.message;}
+ finally{authBusy=false;submit.disabled=false;}
+}
+function bindForms(){if($('#search'))$('#search').oninput=ev=>{filter=ev.target.value;const start=ev.target.selectionStart;render();$('#search').focus();$('#search').setSelectionRange(start,start);};if($('#subject'))$('#subject').onchange=ev=>{subject=ev.target.value;flashIndex=0;flashBack=false;render();};if($('#task-form'))$('#task-form').onsubmit=ev=>{ev.preventDefault();const text=new FormData(ev.target).get('task').trim();if(!text)return;store.update({tasks:[...store.get().tasks,{id:crypto.randomUUID(),text,done:false}]});render();};if($('#profile-form'))$('#profile-form').onsubmit=async event=>{event.preventDefault();try{const values=Object.fromEntries(new FormData(event.target));const profile={...store.get().profile,name:values.name.trim(),phone_number:values.phone_number.trim(),institution:values.institution.trim(),level:values.level.trim()};if(!profile.name)return;await backend.saveProfile(profile);store.update({profile});render();toast(copyRaw("app.3a06720a52cb"));}catch(err){toast(err.message);}};if($('#config-form'))$('#config-form').onsubmit=async ev=>{ev.preventDefault();try{if(!backend.adminReady())throw new Error(copyRaw("app.2d3d0b30bde9"));const f=new FormData(ev.target);backend.configure(f.get('url'),f.get('key'));await loadRemote();toast(copyRaw("app.6054762bce67"));}catch(err){toast(err.message);}};if($('#signup-form'))$('#signup-form').onsubmit=submitSignup;if($('#login-form'))$('#login-form').onsubmit=submitLogin;if($('#import-data'))$('#import-data').onchange=async ev=>{try{const file=ev.target.files[0];if(!file)return;if(file.size>5e6)throw new Error(copyRaw("app.c09fb152a983"));store.import(await file.text());render();toast(copyRaw("app.f7da06c62412"));}catch(err){toast(err.message);}};if($('#focus-subject'))$('#focus-subject').onchange=ev=>focusSubject=ev.target.value;if($('#focus-length'))$('#focus-length').onchange=ev=>{focusSeconds=Number(ev.target.value)*60;focusRemaining=focusSeconds;render();};}
 document.addEventListener('click',async ev=>{const b=ev.target.closest('button,[data-route]');if(!b)return;try{
 if(b.dataset.passwordToggle){const input=$('#'+b.dataset.passwordToggle);if(input&&['password','text'].includes(input.type)){const show=input.type==='password',start=input.selectionStart,end=input.selectionEnd;input.type=show?'text':'password';b.textContent=show?copyRaw("app.ac20a57bfde0"):copyRaw("app.0df6f1cad36c");b.setAttribute('aria-pressed',String(show));b.setAttribute('aria-label',`${show?copyRaw("app.ac20a57bfde0"):copyRaw("app.0df6f1cad36c")} ${b.dataset.passwordLabel||'password'}`);input.focus();try{if(start!==null)input.setSelectionRange(start,end);}catch{}}return;}
-if(backend.adminReady()&&await adminClick(b))return;
+if(route==='admin'&&accessChecked&&backend.staffReady()&&await adminUI?.adminClick(b))return;
+if(b.id==='retry-resources'){void loadRouteData(route);return;}
 if(!backend.user()&&!['menu','sidebar-close','theme','close-dialog'].includes(b.id)&&!b.dataset.route)return;
-if(b.dataset.route==='admin'&&!backend.adminReady()){location.hash='dashboard';return;}
+if(b.dataset.route==='admin'&&!backend.staffReady()){location.hash='dashboard';return;}
 if(b.dataset.route){location.hash=b.dataset.route;if(route===b.dataset.route)navigate();}
 if(b.dataset.readingKind){materialKind=b.dataset.readingKind;render();}
 if(b.dataset.openResource){const [type,id]=b.dataset.openResource.split(':');await openResource(type,id);}
@@ -120,15 +289,80 @@ if(id==='export-data')download('lexamah-backup.json',store.export(),'application
 document.addEventListener('change',ev=>{if(!backend.user())return;if(ev.target.dataset.task){store.update({tasks:store.get().tasks.map(t=>t.id===ev.target.dataset.task?{...t,done:ev.target.checked}:t)});render();}});
 $('#dialog').addEventListener('click',ev=>{if(ev.target===$('#dialog')){const r=$('#dialog').getBoundingClientRect();if(ev.clientX<r.left||ev.clientX>r.right||ev.clientY<r.top||ev.clientY>r.bottom)$('#dialog').close();}});
 window.addEventListener('hashchange',navigate);window.addEventListener('beforeunload',ev=>{if(focusRunning||(quiz&&!quiz.finished)){ev.preventDefault();ev.returnValue='';}});
-initAdmin({render,toast,modal,reload:loadRemote});
 initAudio({toast});initDownloads({toast,modal});
-document.querySelectorAll('[data-icon]').forEach(x=>x.innerHTML=icon(x.dataset.icon));function resetWorkspace(id){accountEpoch++;lastQuizOrders.clear();resetAdmin();resetLibraryOverrides();clearInterval(quizTimer);clearInterval(focusTimer);quiz=null;focusRunning=false;focusRemaining=focusSeconds;flashIndex=0;flashBack=false;remote={};stopAudio();closeReader();if($('#dialog').open)$('#dialog').close();pauseSync();store.useAccount(id);accessChecked=false;}
+document.querySelectorAll('[data-icon]').forEach(x=>x.innerHTML=icon(x.dataset.icon));function resetWorkspace(id){accountEpoch++;lastQuizOrders.clear();resetTips();adminUI?.resetAdmin();invalidateLibrary();clearInterval(quizTimer);clearInterval(focusTimer);quiz=null;focusRunning=false;focusRemaining=focusSeconds;flashIndex=0;flashBack=false;stopAudio();closeReader();if($('#dialog').open)$('#dialog').close();pauseSync();store.useAccount(id);accessChecked=false;}
 function updateSidebar(){const mobile=window.matchMedia('(max-width:900px)').matches;document.body.classList.toggle('sidebar-collapsed',!mobile&&sidebarCollapsed);if(!mobile)$('#menu').setAttribute('aria-expanded',String(!sidebarCollapsed));}
-async function activateAccount(){const id=backend.user()?.id;resetWorkspace(id);if(!id)return;await backend.resolveAccess();if(backend.user()?.id!==id)return;await backend.loadProfile();if(backend.user()?.id!==id)return;accessChecked=true;applyAccountProfile();await syncAccount({render,toast});}
-async function refreshAccess(){if(accessFlight)return accessFlight;accessFlight=(async()=>{const id=backend.user()?.id,wasAdmin=backend.adminReady();if(!id||backend.recoveryReady())return;try{await backend.resolveAccess();if(backend.user()?.id!==id){resetWorkspace(null);location.hash='login';render();}else if(wasAdmin!==backend.adminReady())render();}catch(err){if(!backend.user()){resetWorkspace(null);location.hash='login';render();}else if(route==='admin'){route='dashboard';render();}toast(err.message);}})().finally(()=>accessFlight=null);return accessFlight;}
+async function activateAccount(){
+ const id=backend.user()?.id;
+ if(!id||backend.recoveryReady())return false;
+ resetWorkspace(id);
+ const epoch=accountEpoch;
+ try{
+  await backend.resolveAccess();
+  if(backend.user()?.id!==id||epoch!==accountEpoch)return false;
+  accessChecked=true;
+  applyAccountProfile();
+  return true;
+ }catch(error){
+  if(epoch===accountEpoch){backend.clearSession();resetWorkspace(null);}
+  throw error;
+ }
+}
+function startAccountExtras({freshLogin=false}={}){
+ const id=backend.user()?.id,epoch=accountEpoch;
+ if(!id||!accessChecked)return;
+ if(!freshLogin||!backend.hasProfile())void backend.loadProfile().then(()=>{
+  if(epoch!==accountEpoch||id!==backend.user()?.id||!accessChecked)return;
+  applyAccountProfile();renderBackground();
+ }).catch(()=>{});
+ void syncAccount({render:renderBackground,toast});
+}
+async function refreshAccess(){
+ if(accessFlight)return accessFlight;
+ accessFlight=(async()=>{
+  const epoch=accountEpoch,id=backend.user()?.id,wasAdmin=backend.adminReady(),wasAssistant=backend.assistantReady(),tips=backend.tipsSettings();
+  if(!id||!accessChecked||backend.recoveryReady())return;
+  try{
+   await backend.resolveAccess();
+   if(epoch!==accountEpoch)return;
+   if(backend.user()?.id!==id){resetWorkspace(null);location.hash='login';render();return;}
+   const staffChanged=wasAdmin!==backend.adminReady()||wasAssistant!==backend.assistantReady(),settings=backend.tipsSettings();
+   if(staffChanged){
+    adminUI?.resetAdmin();
+    if(route==='admin'&&$('#dialog').open)$('#dialog').close();
+   }
+   if(tips.enabled&&!settings.enabled)hideTips();
+   if(staffChanged||tips.enabled!==settings.enabled||tips.title!==settings.title)render();
+   if(staffChanged&&route==='admin'&&backend.staffReady())void loadAdminRoute();
+  }catch(err){
+   if(epoch!==accountEpoch)return;
+   if(!backend.user()){resetWorkspace(null);location.hash='login';render();}
+   else if(route==='admin'){route='dashboard';render();}
+   toast(err.message);
+  }
+ })().finally(()=>accessFlight=null);
+ return accessFlight;
+}
 window.addEventListener('resize',updateSidebar);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){refreshAccess();loadBranding();}});
 setInterval(()=>{if(document.visibilityState!=='hidden'){refreshAccess();loadBranding();}},60000);
-async function start(){await loadSiteEditor();loadBranding();await handleRecoveryLink();try{if(backend.user()&&!backend.recoveryReady())await activateAccount();else resetWorkspace(null);}catch(err){backend.clearSession();resetWorkspace(null);toast(err.message);}navigate();trackVisit();if(backend.user()&&!backend.recoveryReady())loadRemote().catch(err=>toast(err.message));else loadAbout().then(render);}
+async function start(){
+ // Recovery strips tokens from a callback URL immediately, before the first view.
+ const recovery=handleRecoveryLink();
+ navigate();
+ loadOptionalFonts();
+ void loadBranding();
+ void import('./site-editor.js').then(module=>module.loadSiteEditor()).then(ok=>{
+  if(ok)renderBackground();
+ }).catch(()=>{});
+ await recovery;
+ const epoch=accountEpoch;
+ try{
+  if(backend.user()&&!backend.recoveryReady()){
+   if(await activateAccount()){navigate();startAccountExtras();}
+  }else if(epoch===accountEpoch&&route==='reset')renderBackground();
+ }catch(error){navigate();toast(error.message);}
+ trackVisit();
+}
 $('#sidebar').insertAdjacentHTML('afterbegin',`<button id="sidebar-close" class="icon-button" aria-label="${copyHTML("app.1afa67a9d3e7")}">×</button>`);
 start();
